@@ -31,7 +31,7 @@ jobs:
         # following include section will be useless.
         include:
           - arduino-platform: "esp8266:esp8266"
-            fqbn: "esp8266:esp8266:nodemcuv2"
+            fqbn: "esp8266:esp8266:nodemcu2"
  
     # This is the platform GitHub will use to run our workflow, we
     # pick Windows for no particular reason.
@@ -56,6 +56,7 @@ jobs:
           arduino-cli core update-index --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
           arduino-cli config dump --verbose
           arduino-cli core install ${{ matrix.arduino-platform }}
+          
           
       #- name: Install ESP8266 Core
       #  run: |
