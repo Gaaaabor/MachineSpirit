@@ -7,10 +7,25 @@ on:
 jobs: 
   test:
     strategy: 
-      matrix:
-        include:
-          - arduino-platform: "arduino:samd" 
-            fqbn: "arduino:samd:nano_33_iot"
+      matrix: 
+         board: 
+           - fqbn: arduino:avr:uno 
+             platforms: | 
+               - name: arduino:avr 
+                 version: 1.8.3 
+             libraries: | 
+               - name: Servo 
+                 version: 1.1.7 
+           # Board that requires Boards Manager URL 
+           - fqbn: esp8266:esp8266:huzzah 
+             platforms: | 
+               - name: esp8266:esp8266 
+                 source-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json 
+                 version: 2.7.4 
+             libraries: | 
+               # The official Servo library is not compatible with ESP8266, but that platform has a bundled Servo lib 
+               # so there are no library dependencies 
+               -
    
     runs-on: windows-latest
  
