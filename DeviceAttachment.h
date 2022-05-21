@@ -11,7 +11,9 @@
      String ownerDeviceSerial; 
      String attachmentName; 
      String serial; 
-     String state; 
+     float measureState;
+     bool switchState;
+     float dimState;
      String capability; 
      int powerPin; 
      int analogInPin; 
