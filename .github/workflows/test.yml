@@ -53,6 +53,11 @@ jobs:
         run: |
           arduino-cli core update-index
           arduino-cli core install ${{ matrix.arduino-platform }}
+          
+      - name: Install libraries
+        run: |
+          arduino-cli lib install "ArduinoJson"
+          arduino-cli lib install "WebSockets"
  
       # Finally, we compile the sketch, using the FQBN that was set
       # in the build matrix.
