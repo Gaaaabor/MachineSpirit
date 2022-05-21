@@ -14,12 +14,12 @@
      float measureState;
      bool switchState;
      float dimState;
-     String capability; 
-     int powerPin; 
-     int analogInPin; 
+     byte capability; 
+     byte powerPin; 
+     byte analogInPin; 
   
    public: 
-     DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String serial, String capability, int powerPin); 
+     DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String serial, byte capability, byte powerPin); 
      float measure(); 
      bool toggle();     
      float dim(float value);     
