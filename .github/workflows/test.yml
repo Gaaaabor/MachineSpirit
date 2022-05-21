@@ -10,8 +10,8 @@ jobs:
       fail-fast: false
 
       matrix:
-         board: 
-           - fqbn: arduino:avr:uno 
+         board:
+           - fqbn: arduino:avr:uno 
              platforms: | 
                - name: arduino:avr 
                  version: 1.8.3 
