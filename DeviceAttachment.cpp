@@ -22,7 +22,7 @@
    delay(200); 
    int analogMeasurement = analogRead(analogInPin); 
    digitalWrite(powerPin, LOW);
-   measurestate = (float)analogMeasurement;
+   measureState = (float)analogMeasurement;
    return measureState; 
  } 
   
@@ -37,7 +37,7 @@
      digitalWrite(powerPin, HIGH);
    }
    
-   switchState = !state;
+   switchState = !switchState;
    return switchState;   
  } 
   
