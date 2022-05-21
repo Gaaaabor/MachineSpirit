@@ -68,7 +68,7 @@ jobs:
           arduino-cli lib install "ArduinoJson"
           arduino-cli lib install "WebSockets"
           #arduino-cli lib install "ESP8266WiFi"
-          arduino-cli lib install --git-url https://github.com/gilmaimon/ArduinoWebsockets
+          arduino-cli lib install --git-url https://github.com/morrissinger/ESP8266-Websocket
  
       # Finally, we compile the sketch, using the FQBN that was set
       # in the build matrix.
