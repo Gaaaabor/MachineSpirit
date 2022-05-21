@@ -1,2 +1,2 @@
 # MachineSpirit
-Generic smart garden software for nodemcu
+Generic smart garden POC software for nodemcu
