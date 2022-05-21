@@ -3,15 +3,13 @@ name: T
 on:
   push:
   #workflow_dispatch:
-  
 # This is the list of jobs that will be run concurrently. 
 # Since we use a build matrix, the actual number of jobs 
 # started depends on how many configurations the matrix 
 # will produce. 
 jobs: 
   # This is the name of the job - can be whatever. 
-  test-matrix: 
-  
+  test:
     # Here we tell GitHub that the jobs must be determined 
     # dynamically depending on a matrix configuration. 
     strategy: 
