@@ -15,6 +15,7 @@ jobs:
     env:
       # ruleid: allowed-unsecure-commands
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      ARDUINO_BOARD_MANAGER_ADDITIONAL_URLS: https://downloads.arduino.cc/packages/package_staging_index.json
     # Here we tell GitHub that the jobs must be determined
     # dynamically depending on a matrix configuration.
     strategy:
@@ -57,7 +58,7 @@ jobs:
       - name: Install ESP8266 Core
         run: |
           arduino-cli config init
-          arduino-cli core update-index --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+          arduino-cli core update-index #--additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
           arduino-cli core install esp8266:esp8266
         
       - name: Install libraries
