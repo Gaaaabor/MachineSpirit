@@ -12,7 +12,9 @@ on: [push, pull_request]
 jobs:
   # This is the name of the job - can be whatever.
   test-matrix:
- 
+    env:
+      # ruleid: allowed-unsecure-commands
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     # Here we tell GitHub that the jobs must be determined
     # dynamically depending on a matrix configuration.
     strategy:
