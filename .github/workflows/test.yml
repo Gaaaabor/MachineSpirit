@@ -31,7 +31,7 @@ jobs:
         # following include section will be useless.
         include:
           - arduino-platform: "esp8266:esp8266"
-            fqbn: "esp8266:esp8266:nodemcu2"
+            fqbn: "esp8266:esp8266:nodemcuv2"
  
     # This is the platform GitHub will use to run our workflow, we
     # pick Windows for no particular reason.
