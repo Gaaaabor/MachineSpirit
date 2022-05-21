@@ -7,13 +7,10 @@ on:
 jobs: 
   test:
     strategy: 
-      matrix: 
-        arduino-platform: "arduino:samd" #"arduino:avr"
+      matrix:
         include:
           - arduino-platform: "arduino:samd" 
-            fqbn: "arduino:samd:nano_33_iot" 
-          #- arduino-platform: "arduino:avr" 
-          #  fqbn: "arduino:avr:unowifi" 
+            fqbn: "arduino:samd:nano_33_iot"
    
     runs-on: windows-latest
  
