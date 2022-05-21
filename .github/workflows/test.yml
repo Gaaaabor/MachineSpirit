@@ -1,8 +1,8 @@
 name: T
-  
-# Here we tell GitHub to run the workflow when a commit 
-# is pushed or a Pull Request is opened. 
-on: [push,workflow_dispatch] 
+
+on:
+  push:
+  #workflow_dispatch:
   
 # This is the list of jobs that will be run concurrently. 
 # Since we use a build matrix, the actual number of jobs 
