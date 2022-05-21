@@ -7,7 +7,8 @@ on:
 jobs: 
   test:
     strategy:
-      fail-fast: false
+      fail-fast: false
+
       matrix:
          board: 
            - fqbn: arduino:avr:uno 
