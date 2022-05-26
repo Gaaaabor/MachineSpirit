@@ -6,6 +6,9 @@
 
 using namespace websockets;
 
+DeviceAttachment attachments[10];
+int attachmentSlots = 0;
+
 const char *ssid = "";
 const char *password = "";
 const String ownerUserId = "";
@@ -32,15 +35,55 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
 
   if (messageType == "AttachmentCreatedNotification")
   {
-    String id = String(doc["Id"]);
     String ownerDeviceSerial = String(doc["OwnerDeviceSerial"]);
+    if(ownerDeviceSerial != deviceSerial || attachmentSlots > 9)
+    {
+      return;
+    }
+    
+    String id = String(doc["Id"]);
     String attachmentName = String(doc["AttachmentName"]);
     String serial = String(doc["Serial"]);
-    String state = String(doc["State"]);
     String capability = String(doc["Capability"]);
     String powerPin = String(doc["PowerPin"]);
 
-    // Todo: create an attachment and add to an array of attachments
+    DeviceAttachment attachment = DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
+    attachments[attachmentSlots] = attachment;
+    attachmentSlots++;
+    
+    // Todo: state!
+    String state = String(doc["State"]);
+    return;
+  }
+
+  if (messageType == "AttachmentRemovedNotification")
+  {
+    String id = String(doc["Id"]);
+
+    // Todo: delete an attachmentfrom the array of attachments
+    
+    return;
+  }
+
+  if (messageType == "AttachmentStateChangedNotification")
+  {    
+    String id = String(doc["Id"]);
+    // Todo: Get the attachment from the array by id
+    
+    // Todo: Set the approriate state
+    switch(capability)
+    {
+      case 0: // BinarySwitch        
+        bool switchState = byte(doc["State"]) == 1;
+        break;
+      case 1: // Dim
+        float dimState = float(doc["State"]);
+        break;
+      case 2: // Measure
+        float measureState = float(doc["State"]);
+        break;      
+    }
+    
     return;
   }
 }
