@@ -6,23 +6,22 @@
 
 class DeviceAttachment
 {
-private:
-	String id;
-	String ownerUserId;
-	String ownerDeviceSerial;
-	String attachmentName;
-	String serial;
-	float measureState;
-	bool switchState;
-	float dimState;
-	byte capability;
-	byte powerPin;
-	byte analogInPin;
+  public:
+    String id;
+    String ownerUserId;
+    String ownerDeviceSerial;
+    String attachmentName;
+    String serial;
+    float measureState;
+    bool switchState;
+    float dimState;
+    byte capability;
+    byte powerPin;
+    byte analogInPin;
 
-public:
-	DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String serial, byte capability, byte powerPin);
-	float measure();
-	bool toggle();
-	float dim(float value);
+    DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String serial, byte capability, byte powerPin);
+    float measure();
+    bool toggle(bool value);
+    float dim(float value);
 };
 #endif

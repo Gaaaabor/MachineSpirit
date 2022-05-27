@@ -6,7 +6,7 @@
 
 using namespace websockets;
 
-DeviceAttachment attachments[10];
+DeviceAttachment *attachments[10];
 int attachmentSlots = 0;
 
 const char *ssid = "";
@@ -36,21 +36,21 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
   if (messageType == "AttachmentCreatedNotification")
   {
     String ownerDeviceSerial = String(doc["OwnerDeviceSerial"]);
-    if(ownerDeviceSerial != deviceSerial || attachmentSlots > 9)
+    if (ownerDeviceSerial != deviceSerial || attachmentSlots > 9)
     {
       return;
     }
-    
+
     String id = String(doc["Id"]);
     String attachmentName = String(doc["AttachmentName"]);
     String serial = String(doc["Serial"]);
-    String capability = String(doc["Capability"]);
-    String powerPin = String(doc["PowerPin"]);
+    byte capability = byte(doc["Capability"]);
+    byte powerPin = byte(doc["PowerPin"]);
 
-    DeviceAttachment attachment = DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
-    attachments[attachmentSlots] = attachment;
+    //DeviceAttachment attachment = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
+    attachments[0] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
     attachmentSlots++;
-    
+
     // Todo: state!
     String state = String(doc["State"]);
     return;
@@ -61,29 +61,30 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
     String id = String(doc["Id"]);
 
     // Todo: delete an attachmentfrom the array of attachments
-    
+
     return;
   }
 
   if (messageType == "AttachmentStateChangedNotification")
-  {    
+  {
     String id = String(doc["Id"]);
     // Todo: Get the attachment from the array by id
-    
-    // Todo: Set the approriate state
-    switch(capability)
-    {
-      case 0: // BinarySwitch        
-        bool switchState = byte(doc["State"]) == 1;
-        break;
-      case 1: // Dim
-        float dimState = float(doc["State"]);
-        break;
-      case 2: // Measure
-        float measureState = float(doc["State"]);
-        break;      
+    for (int i = 0; i < attachmentSlots; i++) {
+      if (attachments[i]->id == id)
+      {
+        switch (int(attachments[i]->capability))
+        {
+          case 0: // BinarySwitch
+            attachments[i]->toggle(String(doc["State"]) == "True");
+            break;
+          case 1: // Dim
+            attachments[i]->dim(float(doc["State"]));
+            break;
+            //case 2: // Measure should not set, because its a read method
+        }
+      }
     }
-    
+
     return;
   }
 }
