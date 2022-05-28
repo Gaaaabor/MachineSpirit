@@ -33,7 +33,7 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
 
   String messageType = String(doc["MessageType"]);
 
-  if (messageType == "AttachmentCreatedNotification")
+  if (messageType == "DeviceAttachmentCreatedNotification")
   {
     String ownerDeviceSerial = String(doc["OwnerDeviceSerial"]);
     if (ownerDeviceSerial != deviceSerial || attachmentSlots > 9)
@@ -48,15 +48,24 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
     byte powerPin = byte(doc["PowerPin"]);
 
     //DeviceAttachment attachment = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
-    attachments[0] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
-    attachmentSlots++;
+    attachments[attachmentSlots] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
 
-    // Todo: state!
-    String state = String(doc["State"]);
+    switch (int(attachments[attachmentSlots]->capability))
+    {
+      case 0: // BinarySwitch
+        attachments[attachmentSlots]->toggle(String(doc["State"]["Value"]) == "True");
+        break;
+      case 1: // Dim
+        attachments[attachmentSlots]->dim(float(doc["State"]["Value"]));
+        break;
+        //case 2: // Measure should not set, because its a read method
+    }
+
+    attachmentSlots++;
     return;
   }
 
-  if (messageType == "AttachmentRemovedNotification")
+  if (messageType == "DeviceAttachmentRemovedNotification")
   {
     String id = String(doc["Id"]);
 
@@ -65,7 +74,7 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
     return;
   }
 
-  if (messageType == "AttachmentStateChangedNotification")
+  if (messageType == "DeviceAttachmentStateChangedNotification")
   {
     String id = String(doc["Id"]);
     // Todo: Get the attachment from the array by id
@@ -75,10 +84,10 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
         switch (int(attachments[i]->capability))
         {
           case 0: // BinarySwitch
-            attachments[i]->toggle(String(doc["State"]) == "True");
+            attachments[i]->toggle(String(doc["State"]["Value"]) == "True");
             break;
           case 1: // Dim
-            attachments[i]->dim(float(doc["State"]));
+            attachments[i]->dim(float(doc["State"]["Value"]));
             break;
             //case 2: // Measure should not set, because its a read method
         }
