@@ -44,11 +44,11 @@ bool DeviceAttachment::Toggle(bool value)
   SwitchState = value;
   if (SwitchState)
   {
-    digitalWrite(PowerPin, LOW);
+    digitalWrite(PowerPin, HIGH);
   }
   else
   {
-    digitalWrite(PowerPin, HIGH);
+    digitalWrite(PowerPin, LOW);
   }
 
   return SwitchState;
