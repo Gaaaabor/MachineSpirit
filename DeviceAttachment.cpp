@@ -1,60 +1,62 @@
 // DeviceAttachment.cpp
 #include "DeviceAttachment.h"
 
-DeviceAttachment::DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String serial, byte capability, byte powerPin)
+DeviceAttachment::DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, byte capability, byte powerPin)
 {
-  id = id;
-  ownerUserId = ownerUserId;
-  ownerDeviceSerial = ownerDeviceSerial;
-  attachmentName = attachmentName;
-  serial = serial;
-  capability = capability;
-  powerPin = powerPin;
+  Id = id;
+  OwnerUserId = ownerUserId;
+  OwnerDeviceSerial = ownerDeviceSerial;
+  AttachmentName = attachmentName;
+  AttachmentSerial = attachmentSerial;
+  Capability = capability;
+  PowerPin = powerPin;
 
   // Not sure
-  analogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
+  AnalogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
 
-  pinMode(powerPin, OUTPUT);
+  pinMode(PowerPin, OUTPUT);
 }
 
-float DeviceAttachment::measure()
+float DeviceAttachment::Measure()
 {
-  if (capability != 2) // Capability 2 is Measure
+  if (Capability != 2) // Capability 2 is Measure
   {
     return 0;
   }
 
-  digitalWrite(powerPin, HIGH);
+  digitalWrite(PowerPin, HIGH);
   delay(200);
-  int analogMeasurement = analogRead(analogInPin);
-  digitalWrite(powerPin, LOW);
-  measureState = (float)analogMeasurement;
-  return measureState;
+  int analogMeasurement = analogRead(AnalogInPin);
+  digitalWrite(PowerPin, LOW);
+  MeasureState = (float)analogMeasurement;
+  return MeasureState;
 }
 
-bool DeviceAttachment::toggle(bool value)
+bool DeviceAttachment::Toggle(bool value)
 {
-  if (capability != 0) // Capability 0 is BinarySwitch
+  if (Capability != 0) // Capability 0 is BinarySwitch
   {
     return false;
   }
 
-  switchState = value;
-  if (switchState)
+  Serial.println("Toggle!");
+
+  SwitchState = value;
+  if (SwitchState)
   {
-    digitalWrite(powerPin, LOW);
+    digitalWrite(PowerPin, LOW);
   }
   else
   {
-    digitalWrite(powerPin, HIGH);
+    digitalWrite(PowerPin, HIGH);
   }
 
-  return switchState;
+  return SwitchState;
 }
 
-float DeviceAttachment::dim(float value)
+float DeviceAttachment::Dim(float value)
 {
-  if (capability != 1) // Capability 1 is Dim
+  if (Capability != 1) // Capability 1 is Dim
   {
     return 0;
   }
@@ -68,8 +70,8 @@ float DeviceAttachment::dim(float value)
     value = 0;
   }
 
-  analogWrite(powerPin, value);
+  analogWrite(PowerPin, value);
 
-  dimState = value;
-  return dimState;
+  DimState = value;
+  return DimState;
 }

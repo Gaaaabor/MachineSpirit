@@ -7,21 +7,21 @@
 class DeviceAttachment
 {
   public:
-    String id;
-    String ownerUserId;
-    String ownerDeviceSerial;
-    String attachmentName;
-    String serial;
-    float measureState;
-    bool switchState;
-    float dimState;
-    byte capability;
-    byte powerPin;
-    byte analogInPin;
+    String Id;
+    String OwnerUserId;
+    String OwnerDeviceSerial;
+    String AttachmentName;
+    String AttachmentSerial;
+    float MeasureState;
+    bool SwitchState;
+    float DimState;
+    byte Capability;
+    byte PowerPin;
+    byte AnalogInPin;
 
-    DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String serial, byte capability, byte powerPin);
-    float measure();
-    bool toggle(bool value);
-    float dim(float value);
+    DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, byte capability, byte powerPin);
+    float Measure();
+    bool Toggle(bool value);
+    float Dim(float value);
 };
 #endif

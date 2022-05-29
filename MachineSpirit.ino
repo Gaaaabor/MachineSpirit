@@ -12,6 +12,7 @@ int attachmentSlots = 0;
 const char *ssid = "";
 const char *password = "";
 const String ownerUserId = "";
+const String deviceId = "";
 const String deviceSerial = "";
 const String deviceName = "";
 const char *serverAddress = "";
@@ -33,33 +34,51 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
 
   String messageType = String(doc["MessageType"]);
 
+  if (messageType == "DeviceCreatedNotification" || messageType == "DeviceAlreadyExistsNotification")
+  {
+    sendListDeviceAttachmentsRequest();
+    return;
+  }
+
+  if (messageType == "ListDeviceAttachmentsResponse")
+  {
+    attachmentSlots = 0;
+    int attachmentCount = int(doc["AttachmentCount"]);
+    for (int i = 0; i < attachmentCount; i++)
+    {
+      String id = String(doc["Attachments"][i]["Id"]);
+      String attachmentName = String(doc["Attachments"][i]["AttachmentName"]);
+      String attachmentSerial = String(doc["Attachments"][i]["Serial"]);
+      byte capability = byte(doc["Attachments"][i]["Capability"]);
+      byte powerPin = byte(doc["Attachments"][i]["PowerPin"]);
+
+      attachments[i] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin);
+      attachmentSlots++;
+    }
+
+    return;
+  }
+
   if (messageType == "DeviceAttachmentCreatedNotification")
   {
-    String ownerDeviceSerial = String(doc["OwnerDeviceSerial"]);
-    if (ownerDeviceSerial != deviceSerial || attachmentSlots > 9)
+    String ownerDeviceId = String(doc["OwnerDeviceId"]);
+    if (ownerDeviceId != deviceId || attachmentSlots > 9)
     {
       return;
     }
 
+    Serial.println("Deserializing..");
+
     String id = String(doc["Id"]);
     String attachmentName = String(doc["AttachmentName"]);
-    String serial = String(doc["Serial"]);
+    String attachmentSerial = String(doc["Serial"]);
     byte capability = byte(doc["Capability"]);
     byte powerPin = byte(doc["PowerPin"]);
 
-    //DeviceAttachment attachment = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
-    attachments[attachmentSlots] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, serial, capability, powerPin);
+    attachments[attachmentSlots] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin);
 
-    switch (int(attachments[attachmentSlots]->capability))
-    {
-      case 0: // BinarySwitch
-        attachments[attachmentSlots]->toggle(String(doc["State"]["Value"]) == "True");
-        break;
-      case 1: // Dim
-        attachments[attachmentSlots]->dim(float(doc["State"]["Value"]));
-        break;
-        //case 2: // Measure should not set, because its a read method
-    }
+    Serial.print("Added to slot: ");
+    Serial.print(String(attachmentSlots));
 
     attachmentSlots++;
     return;
@@ -77,20 +96,25 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
   if (messageType == "DeviceAttachmentStateChangedNotification")
   {
     String id = String(doc["Id"]);
-    // Todo: Get the attachment from the array by id
+
     for (int i = 0; i < attachmentSlots; i++) {
-      if (attachments[i]->id == id)
+      if (attachments[i]->Id.equals(id))
       {
-        switch (int(attachments[i]->capability))
+        Serial.println("Found!");
+        Serial.println(int(attachments[i]->Capability));
+        switch (int(attachments[i]->Capability))
         {
           case 0: // BinarySwitch
-            attachments[i]->toggle(String(doc["State"]["Value"]) == "True");
+            attachments[i]->Toggle(String(doc["State"]["Value"]) == "True");
             break;
           case 1: // Dim
-            attachments[i]->dim(float(doc["State"]["Value"]));
+            attachments[i]->Dim(float(doc["State"]["Value"]));
             break;
-            //case 2: // Measure should not set, because its a read method
         }
+      }
+      else
+      {
+        Serial.println("Mismatch " + attachments[i]->Id + " vs " + id);
       }
     }
 
@@ -186,14 +210,14 @@ void loop()
   }
 }
 
-// Todo: Cleanup these
 void sendRegisterDeviceRequest()
 {
   DynamicJsonDocument doc(1024);
 
   doc["MessageType"] = "RegisterDeviceRequest";
+  doc["Id"] = deviceId;
   doc["OwnerUserId"] = ownerUserId;
-  doc["Serial"] = deviceSerial;
+  doc["DeviceSerial"] = deviceSerial;
   doc["Name"] = deviceName;
 
   String message;
@@ -201,6 +225,21 @@ void sendRegisterDeviceRequest()
   wsclient.send(message);
 
   Serial.println("Register Device");
+}
+
+void sendListDeviceAttachmentsRequest()
+{
+  DynamicJsonDocument doc(1024);
+
+  doc["MessageType"] = "ListDeviceAttachmentsRequest";
+  doc["OwnerUserId"] = ownerUserId;
+  doc["DeviceSerial"] = deviceSerial;
+
+  String message;
+  serializeJson(doc, message);
+  wsclient.send(message);
+
+  Serial.println("List device attachments");
 }
 
 void sendRecordMeasurementRequest(String attachmentSerial, long measurementValue, String unitCode)
