@@ -6,6 +6,8 @@
 
 class DeviceAttachment
 {
+  private:
+    unsigned long lastMeasure;
   public:
     String Id;
     String OwnerUserId;
@@ -15,13 +17,14 @@ class DeviceAttachment
     float MeasureState;
     bool SwitchState;
     float DimState;
-    byte Capability;
-    byte PowerPin;
-    byte AnalogInPin;
+    String Capability;
+    byte PowerPin;    
+    unsigned long MeasurementFrequency;
 
-    DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, byte capability, byte powerPin);
+    DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, String capability, byte powerPin, unsigned long measurementFrequency);
     float Measure();
     bool Toggle(bool value);
     float Dim(float value);
+    bool ShouldMeasure();
 };
 #endif

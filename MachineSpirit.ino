@@ -49,10 +49,11 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
       String id = String(doc["Attachments"][i]["Id"]);
       String attachmentName = String(doc["Attachments"][i]["AttachmentName"]);
       String attachmentSerial = String(doc["Attachments"][i]["Serial"]);
-      byte capability = byte(doc["Attachments"][i]["Capability"]);
+      String capability = String(doc["Attachments"][i]["Capability"]);
       byte powerPin = byte(doc["Attachments"][i]["PowerPin"]);
+      unsigned long measurementFrequency = (unsigned long)(doc["Attachments"][i]["MeasurementFrequency"]);
 
-      attachments[i] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin);
+      attachments[i] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
       attachmentSlots++;
     }
 
@@ -67,18 +68,18 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
       return;
     }
 
-    Serial.println("Deserializing..");
+    Serial.println("Deserializing...");
 
     String id = String(doc["Id"]);
     String attachmentName = String(doc["AttachmentName"]);
     String attachmentSerial = String(doc["Serial"]);
-    byte capability = byte(doc["Capability"]);
+    String capability = String(doc["Capability"]);
     byte powerPin = byte(doc["PowerPin"]);
+    unsigned long measurementFrequency = (unsigned long)(doc["MeasurementFrequency"]);
 
-    attachments[attachmentSlots] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin);
+    attachments[attachmentSlots] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
 
-    Serial.print("Added to slot: ");
-    Serial.print(String(attachmentSlots));
+    Serial.println("Added to slot: " + String(attachmentSlots));
 
     attachmentSlots++;
     return;
@@ -100,16 +101,16 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
     for (int i = 0; i < attachmentSlots; i++) {
       if (attachments[i]->Id.equals(id))
       {
-        Serial.println("Found!");
-        Serial.println(int(attachments[i]->Capability));
-        switch (int(attachments[i]->Capability))
+        Serial.println("Found: " + String(attachments[i]->Capability));
+
+        String capability = attachments[i]->Capability;
+        if (capability == "BinarySwitch")
         {
-          case 0: // BinarySwitch
-            attachments[i]->Toggle(String(doc["State"]["Value"]) == "True");
-            break;
-          case 1: // Dim
-            attachments[i]->Dim(float(doc["State"]["Value"]));
-            break;
+          attachments[i]->Toggle(String(doc["State"]["Value"]) == "True");
+        }
+        else if (capability == "Dim")
+        {
+          attachments[i]->Dim(float(doc["State"]["Value"]));
         }
       }
       else
@@ -164,7 +165,7 @@ void setup()
 
   Serial.println();
   Serial.println("WiFi connected");
-  Serial.print("IP address: ");
+  Serial.println("IP address:");
   Serial.println(WiFi.localIP());
 
   // Setup Callbacks
@@ -208,6 +209,27 @@ void loop()
     delay(5000);
     connect();
   }
+
+  tryMeasure();
+  //trySleep(); // Todo: Implement
+}
+
+void tryMeasure()
+{
+  for (int i = 0; i < attachmentSlots; i++)
+  {
+    if (attachments[i]->ShouldMeasure())
+    {
+      float measurement = attachments[i]->Measure();
+      sendRecordMeasurementRequest(attachments[i]->AttachmentSerial, measurement, "%");
+    }
+  }
+}
+
+void trySleep()
+{
+  // 1. Check if the sleep frequency is due
+  // 2. Sleep
 }
 
 void sendRegisterDeviceRequest()
@@ -249,6 +271,8 @@ void sendRecordMeasurementRequest(String attachmentSerial, long measurementValue
   DynamicJsonDocument doc(1024);
 
   doc["MessageType"] = "RecordMeasurementRequest";
+  doc["OwnerUserId"] = ownerUserId;
+  doc["DeviceSerial"] = deviceSerial;
   doc["Serial"] = attachmentSerial;
   doc["Value"] = mvalue;
   doc["UnitCode"] = unitCode;

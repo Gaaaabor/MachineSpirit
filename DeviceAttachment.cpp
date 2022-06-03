@@ -1,7 +1,7 @@
 // DeviceAttachment.cpp
 #include "DeviceAttachment.h"
 
-DeviceAttachment::DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, byte capability, byte powerPin)
+DeviceAttachment::DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, String capability, byte powerPin, unsigned long measurementFrequency)
 {
   Id = id;
   OwnerUserId = ownerUserId;
@@ -10,23 +10,23 @@ DeviceAttachment::DeviceAttachment(String id, String ownerUserId, String ownerDe
   AttachmentSerial = attachmentSerial;
   Capability = capability;
   PowerPin = powerPin;
-
-  // Not sure
-  AnalogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
+  MeasurementFrequency = measurementFrequency;
+  lastMeasure = 0;  
 
   pinMode(PowerPin, OUTPUT);
 }
 
 float DeviceAttachment::Measure()
 {
-  if (Capability != 2) // Capability 2 is Measure
+  if (Capability != "Measure") // Todo: use byte(2)
   {
     return 0;
   }
 
   digitalWrite(PowerPin, HIGH);
   delay(200);
-  int analogMeasurement = analogRead(AnalogInPin);
+  int analogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
+  int analogMeasurement = analogRead(analogInPin);
   digitalWrite(PowerPin, LOW);
   MeasureState = (float)analogMeasurement;
   return MeasureState;
@@ -34,7 +34,7 @@ float DeviceAttachment::Measure()
 
 bool DeviceAttachment::Toggle(bool value)
 {
-  if (Capability != 0) // Capability 0 is BinarySwitch
+  if (Capability != "BinarySwitch") // Todo: use byte (0)
   {
     return false;
   }
@@ -56,7 +56,7 @@ bool DeviceAttachment::Toggle(bool value)
 
 float DeviceAttachment::Dim(float value)
 {
-  if (Capability != 1) // Capability 1 is Dim
+  if (Capability != "Dim") // Todo: use byte (1)
   {
     return 0;
   }
@@ -74,4 +74,18 @@ float DeviceAttachment::Dim(float value)
 
   DimState = value;
   return DimState;
+}
+
+bool DeviceAttachment::ShouldMeasure()
+{
+  // Todo: add overflow checks
+  unsigned long now = millis();
+  unsigned long asdf = lastMeasure + MeasurementFrequency;
+  bool shouldMeasure = Capability == "Measure" && MeasurementFrequency > 0 && (asdf) <= now;
+  if (shouldMeasure)
+  {
+    lastMeasure = now;
+  }
+  
+  return shouldMeasure;
 }
