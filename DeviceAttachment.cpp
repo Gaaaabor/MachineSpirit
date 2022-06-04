@@ -11,7 +11,7 @@ DeviceAttachment::DeviceAttachment(String id, String ownerUserId, String ownerDe
   Capability = capability;
   PowerPin = powerPin;
   MeasurementFrequency = measurementFrequency;
-  lastMeasure = 0;  
+  lastMeasureTime = 0;  
 
   pinMode(PowerPin, OUTPUT);
 }
@@ -80,11 +80,11 @@ bool DeviceAttachment::ShouldMeasure()
 {
   // Todo: add overflow checks
   unsigned long now = millis();
-  unsigned long asdf = lastMeasure + MeasurementFrequency;
-  bool shouldMeasure = Capability == "Measure" && MeasurementFrequency > 0 && (asdf) <= now;
+  unsigned long nextMeasureTime = lastMeasureTime + MeasurementFrequency;
+  bool shouldMeasure = Capability == "Measure" && MeasurementFrequency > 0 && nextMeasureTime <= now;
   if (shouldMeasure)
   {
-    lastMeasure = now;
+    lastMeasureTime = now;
   }
   
   return shouldMeasure;

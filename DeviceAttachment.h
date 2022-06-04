@@ -7,7 +7,7 @@
 class DeviceAttachment
 {
   private:
-    unsigned long lastMeasure;
+    unsigned long lastMeasureTime;
   public:
     String Id;
     String OwnerUserId;
