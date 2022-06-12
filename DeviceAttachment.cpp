@@ -1,7 +1,7 @@
 // DeviceAttachment.cpp
 #include "DeviceAttachment.h"
 
-DeviceAttachment::DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, String capability, byte powerPin, unsigned long measurementFrequency)
+DeviceAttachment::DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, String capability, int powerPin, unsigned long measurementFrequency)
 {
   Id = id;
   OwnerUserId = ownerUserId;
@@ -86,6 +86,6 @@ bool DeviceAttachment::ShouldMeasure()
   {
     lastMeasureTime = now;
   }
-  
+
   return shouldMeasure;
 }

@@ -18,10 +18,10 @@ class DeviceAttachment
     bool SwitchState;
     float DimState;
     String Capability;
-    byte PowerPin;    
+    int PowerPin;
     unsigned long MeasurementFrequency;
 
-    DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, String capability, byte powerPin, unsigned long measurementFrequency);
+    DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, String capability, int powerPin, unsigned long measurementFrequency);
     float Measure();
     bool Toggle(bool value);
     float Dim(float value);

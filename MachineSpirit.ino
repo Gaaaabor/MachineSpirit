@@ -6,16 +6,16 @@
 
 using namespace websockets;
 
-DeviceAttachment *attachments[10];
+DeviceAttachment *attachments[9];
 int attachmentSlots = 0;
 
-const char *ssid = "";
-const char *password = "";
+const String ssid = "";
+const String password = "";
 const String ownerUserId = "";
 const String deviceId = "";
 const String deviceSerial = "";
 const String deviceName = "";
-const char *serverAddress = "";
+const String serverAddress = "";
 const uint16_t serverPort = 80;
 bool websocketConnected = false;
 
@@ -50,7 +50,7 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
       String attachmentName = String(doc["Attachments"][i]["AttachmentName"]);
       String attachmentSerial = String(doc["Attachments"][i]["Serial"]);
       String capability = String(doc["Attachments"][i]["Capability"]);
-      byte powerPin = byte(doc["Attachments"][i]["PowerPin"]);
+      int powerPin = int(doc["Attachments"][i]["PowerPin"]);
       unsigned long measurementFrequency = (unsigned long)(doc["Attachments"][i]["MeasurementFrequency"]);
 
       attachments[i] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
@@ -74,7 +74,7 @@ void onMessageCallback(WebsocketsMessage websocketsMessage)
     String attachmentName = String(doc["AttachmentName"]);
     String attachmentSerial = String(doc["Serial"]);
     String capability = String(doc["Capability"]);
-    byte powerPin = byte(doc["PowerPin"]);
+    int powerPin = int(doc["PowerPin"]);
     unsigned long measurementFrequency = (unsigned long)(doc["MeasurementFrequency"]);
 
     attachments[attachmentSlots] = new DeviceAttachment(id, ownerUserId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
