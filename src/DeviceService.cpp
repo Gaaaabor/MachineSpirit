@@ -2,14 +2,12 @@
 #include "DeviceService.h"
 
 #include <ArduinoJson.h>
-#include <ArduinoWebsockets.h>
 #include <ArduinoJson.h>
+#include <WebSocketsClient.h>
 
-using namespace websockets;
-
-void DeviceService::Initialize(WebsocketsClient &wsClient)
+DeviceService::DeviceService(WebSocketsClient &webSocketsClient)
 {
-  wsClient = wsClient;
+  this->webSocketsClient = &webSocketsClient;
 }
 
 void DeviceService::CreateDevice(String &userId, String &deviceId, String &deviceSerial, String &deviceName)
@@ -26,10 +24,12 @@ void DeviceService::CreateDevice(String &userId, String &deviceId, String &devic
 
   String message;
   serializeJson(doc, message);
-  wsClient.send(message);  
 
-  Serial.println("Creation sent:");
   Serial.println(message);
+
+  webSocketsClient->sendTXT(message);
+
+  Serial.println("Creation sent:");  
 }
 
 void DeviceService::ConnectDevice(String &userId, String &deviceId, String &deviceSerial)
@@ -43,7 +43,7 @@ void DeviceService::ConnectDevice(String &userId, String &deviceId, String &devi
 
   String message;
   serializeJson(doc, message);
-  wsClient.send(message);
+  webSocketsClient->sendTXT(message);
 
   Serial.println("Connecting device");
 }
@@ -59,7 +59,7 @@ void DeviceService::VerifyDevice(String &userId, String &deviceId)
 
   String message;
   serializeJson(doc, message);
-  wsClient.send(message);
+  webSocketsClient->sendTXT(message);
 
   Serial.println("Verifing device");
 }
@@ -77,7 +77,7 @@ void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &
 
   String message;
   serializeJson(doc, message);
-  wsClient.send(message);
+  webSocketsClient->sendTXT(message);
 
   Serial.println("Sending RecordMeasurementCommand");
 }
@@ -94,7 +94,7 @@ void DeviceService::RecordRange(String &userId, String &deviceId, String &device
 
   String message;
   serializeJson(doc, message);
-  wsClient.send(message);
+  webSocketsClient->sendTXT(message);
 
   Serial.println("Sending RecordRangeCommand");
 }
@@ -111,7 +111,7 @@ void DeviceService::RecordSwitch(String &userId, String &deviceId, String &devic
 
   String message;
   serializeJson(doc, message);
-  wsClient.send(message);
+  webSocketsClient->sendTXT(message);
 
   Serial.println("Sending RecordSwitchCommand");
 }
@@ -126,7 +126,7 @@ void DeviceService::ListDeviceAttachments(String &userId, String &deviceId)
 
   String message;
   serializeJson(doc, message);
-  wsClient.send(message);
+  webSocketsClient->sendTXT(message);
 
   Serial.println("Sending ListDeviceAttachmentsQuery");
 }

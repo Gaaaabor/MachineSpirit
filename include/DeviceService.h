@@ -2,17 +2,15 @@
 #ifndef DeviceService_h
 #define DeviceService_h
 
-#include <ArduinoWebsockets.h>
-
-using namespace websockets;
+#include <WebSocketsClient.h>
 
 class DeviceService
 {
 private:
-  WebsocketsClient wsClient;
+  WebSocketsClient *webSocketsClient;
 
 public:
-  void Initialize(WebsocketsClient &wsClient);
+  DeviceService(WebSocketsClient &webSocketClient);
   void CreateDevice(String &userId, String &deviceId, String &deviceSerial, String &deviceName);
   void ConnectDevice(String &userId, String &deviceId, String &deviceSerial);
   void VerifyDevice(String &userId, String &deviceId);

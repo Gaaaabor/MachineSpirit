@@ -3,33 +3,37 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <ArduinoWebsockets.h>
 #include "DeviceAttachment.h"
 #include "DeviceService.h"
 
-using namespace websockets;
-
-DeviceModel::DeviceModel(String userId, String deviceId, String deviceSerial, String deviceName)
+DeviceModel::DeviceModel(String &userId, String &deviceId, String &deviceSerial, String &deviceName)
 {
-    userId = userId;
-    deviceId = deviceId;
-    deviceSerial = deviceSerial;
-    deviceName = deviceName;
-    attachmentSlots = 0;
+    this->userId = userId;
+    this->deviceId = deviceId;
+    this->deviceSerial = deviceSerial;
+    this->deviceName = deviceName;
+    this->attachmentSlots = 0;
 }
 
-void DeviceModel::CreateDevice(DeviceService &deviceService)
-{
-    deviceService.CreateDevice(userId, deviceId, deviceSerial, deviceName);
-}
-
-void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument, DeviceService &deviceService)
+void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 {
     String messageType = String(dynamicJsonDocument["MessageType"]);
 
-    if (messageType == "DeviceCreatedNotification" || messageType == "DeviceAlreadyExistsNotification")
+    if (messageType == "DeviceConnectedHardwareNotification")
     {
-        deviceService.ListDeviceAttachments(userId, deviceId);
+        IsConnected = true;
+        return;
+    }
+
+    if (messageType == "DeviceCreatedHardwareNotification")
+    {
+        IsCreated = true;
+        return;
+    }
+
+    if (messageType == "DeviceVerificationRequestedHardwareNotification")
+    {
+        // TODO: Start device verification flow
         return;
     }
 

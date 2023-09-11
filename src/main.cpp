@@ -1,88 +1,81 @@
 #include <ESP8266WiFi.h>
-#include <ArduinoWebsockets.h>
 #include <ArduinoJson.h>
+#include <WebSocketsClient.h>
 
 #include "DeviceModel.h"
-
-using namespace websockets;
 
 const String wifiSsid = "PLACEHOLDER";
 const String wifiPassword = "PLACEHOLDER";
 const String websocketAddress = "PLACEHOLDER";
 const uint16_t websocketPort = 80;
-bool websocketConnected = false;
+bool isWebsocketConnected = false;
+unsigned long previousMillis = 0;
+const long interval = 5000;
 
-// Use WiFiClient class to create TCP connections
-WebsocketsClient wsClient;
-DeviceService deviceService;
-DeviceModel deviceModel("PLACEHOLDER", "PLACEHOLDER", "PLACEHOLDER", "PLACEHOLDER");
+String userId = "PLACEHOLDER";
+String deviceId = "PLACEHOLDER";
+String deviceSerial = "PLACEHOLDER";
+String deviceName = "PLACEHOLDER";
 
-void onWebsocketsMessage(WebsocketsMessage websocketsMessage)
+WebSocketsClient webSocketClient;
+DeviceService deviceService(webSocketClient);
+DeviceModel deviceModel(userId, deviceId, deviceSerial, deviceName);
+
+void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
 {
-  String message = websocketsMessage.data();
-
-  Serial.print("Got Message: ");
-  Serial.println(message);
-
   DynamicJsonDocument doc(1024);
-  deserializeJson(doc, message);
 
-  deviceModel.Tell(doc, deviceService);
-}
+  switch (type)
+  {
+  case WStype_DISCONNECTED:
+    Serial.printf("[WSc] Disconnected!\n");
+    isWebsocketConnected = false;
+    deviceModel.IsCreated = false;
+    deviceModel.IsConnected = false;
+    break;
 
-void onWebsocketsEvent(WebsocketsEvent event, String data)
-{
-  if (event == WebsocketsEvent::ConnectionOpened)
-  {
-    Serial.println("Connnection Opened");
-    websocketConnected = true;
-  }
-  else if (event == WebsocketsEvent::ConnectionClosed)
-  {
-    Serial.println("Connnection Closed");
-    Serial.println(data);
-    websocketConnected = false;
-  }
-  else if (event == WebsocketsEvent::GotPing)
-  {
-    Serial.println("Got a Ping!");
-  }
-  else if (event == WebsocketsEvent::GotPong)
-  {
-    Serial.println("Got a Pong!");
-  }
-}
+  case WStype_CONNECTED:
+    Serial.printf("[WSc] Connected to url: %s\n", payload);
+    isWebsocketConnected = true;
+    break;
 
-void connectWebsocketsClient()
-{
-  if (websocketConnected)
-  {
-    Serial.println("WebSocketClient connected!");
-    return;
-  }
+  case WStype_TEXT:
+    Serial.printf("[WSc] got text: %s\n", payload);
+    deserializeJson(doc, payload);
+    deviceModel.Tell(doc);
+    break;
 
-  Serial.println("Connecting to websocket server");
+  case WStype_BIN:
+    Serial.printf("[WSc] got binary length: %u\n", length);
+    break;
 
-  while (!wsClient.connect(websocketAddress, websocketPort, "/"))
-  {
-    delay(1000);
-    Serial.print(".");
-  }
+  case WStype_PING:
+    Serial.println("[WSc] got PING");
+    break;
 
-  Serial.println("WebSocketClient connected!");
-}
+  case WStype_PONG:
+    Serial.println("[WSc] got PONG");
+    break;
 
-void pollWebsocketsClient()
-{
-  if (wsClient.available())
-  {
-    wsClient.poll();
-  }
+  case WStype_ERROR:
+    Serial.println("[WSc] got ERROR");
+    break;
 
-  if (!websocketConnected)
-  {
-    delay(5000);
-    connectWebsocketsClient();
+  case WStype_FRAGMENT_TEXT_START:
+    Serial.println("[WSc] got TEXT START");
+    break;
+
+  case WStype_FRAGMENT_BIN_START:
+    Serial.println("[WSc] got BIN START");
+    break;
+
+  case WStype_FRAGMENT:
+    Serial.println("[WSc] got FRAGMENT");
+    break;
+
+  case WStype_FRAGMENT_FIN:
+    Serial.println("[WSc] got FRAGMENT FIN");
+    break;
   }
 }
 
@@ -109,23 +102,52 @@ void setup()
   Serial.println("IP address:");
   Serial.println(WiFi.localIP());
 
-  // Setup Callbacks
-  wsClient.onMessage(onWebsocketsMessage);
-  wsClient.onEvent(onWebsocketsEvent);
+  webSocketClient.begin("devices.cloudpie.dev", 80, "/");
+  webSocketClient.onEvent(webSocketEvent);
 
-  connectWebsocketsClient();
+  Serial.println("WebSocket connected");
+}
 
-  deviceService.Initialize(wsClient);
+void timedStuff()
+{
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis < interval)
+  {
+    return;
+  }
 
-  delay(2000);
+  Serial.println("timedStuff triggered!");
+  previousMillis = currentMillis;
 
-  deviceModel.CreateDevice(deviceService);
+  if (!isWebsocketConnected)
+  {
+    Serial.println("WebSocket not connected");
+    return;
+  }
 
-  wsClient.ping();
-  Serial.println("Ping!");
+  if (!deviceModel.IsCreated)
+  {
+    Serial.println("Creating device");
+    deviceService.CreateDevice(userId, deviceId, deviceSerial, deviceName);
+  }
+  else
+  {
+    Serial.println("Device already created");
+  }
+
+  if (!deviceModel.IsConnected)
+  {
+    Serial.println("Connecting device");
+    deviceService.ConnectDevice(userId, deviceId, deviceSerial);
+  }
+  else
+  {
+    Serial.println("Device already connected");
+  }
 }
 
 void loop()
 {
-  pollWebsocketsClient();
+  webSocketClient.loop();
+  timedStuff();
 }

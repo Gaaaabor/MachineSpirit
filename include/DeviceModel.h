@@ -4,7 +4,6 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <ArduinoWebsockets.h>
 #include "DeviceAttachment.h"
 #include "DeviceService.h"
 
@@ -21,8 +20,9 @@ private:
     void tryMeasure(DeviceService &deviceService);
 
 public:
-    DeviceModel(String userId, String deviceId, String deviceSerial, String deviceName);
-    void CreateDevice(DeviceService &deviceService);
-    void Tell(DynamicJsonDocument &dynamicJsonDocument, DeviceService &deviceService);
+    bool IsCreated;
+    bool IsConnected;
+    DeviceModel(String &userId, String &deviceId, String &deviceSerial, String &deviceName);
+    void Tell(DynamicJsonDocument &dynamicJsonDocument);
 };
 #endif
