@@ -16,13 +16,16 @@ private:
     String deviceName;
     int attachmentSlots;
     DeviceAttachment *attachments[9];
+    DeviceService *deviceService;
 
-    void tryMeasure(DeviceService &deviceService);
+    void measure();
 
 public:
     bool IsCreated;
     bool IsConnected;
-    DeviceModel(String &userId, String &deviceId, String &deviceSerial, String &deviceName);
+    DeviceModel(String &userId, String &deviceId, String &deviceSerial, String &deviceName, DeviceService &deviceService);
     void Tell(DynamicJsonDocument &dynamicJsonDocument);
+    void TryCreate();
+    void TryConnect();
 };
 #endif

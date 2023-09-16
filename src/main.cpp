@@ -19,7 +19,7 @@ String deviceName = "PLACEHOLDER";
 
 WebSocketsClient webSocketClient;
 DeviceService deviceService(webSocketClient);
-DeviceModel deviceModel(userId, deviceId, deviceSerial, deviceName);
+DeviceModel deviceModel(userId, deviceId, deviceSerial, deviceName, deviceService);
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
 {
@@ -125,25 +125,8 @@ void timedStuff()
     return;
   }
 
-  if (!deviceModel.IsCreated)
-  {
-    Serial.println("Creating device");
-    deviceService.CreateDevice(userId, deviceId, deviceSerial, deviceName);
-  }
-  else
-  {
-    Serial.println("Device already created");
-  }
-
-  if (!deviceModel.IsConnected)
-  {
-    Serial.println("Connecting device");
-    deviceService.ConnectDevice(userId, deviceId, deviceSerial);
-  }
-  else
-  {
-    Serial.println("Device already connected");
-  }
+  deviceModel.TryCreate();
+  deviceModel.TryConnect();
 }
 
 void loop()

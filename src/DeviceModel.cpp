@@ -6,13 +6,14 @@
 #include "DeviceAttachment.h"
 #include "DeviceService.h"
 
-DeviceModel::DeviceModel(String &userId, String &deviceId, String &deviceSerial, String &deviceName)
+DeviceModel::DeviceModel(String &userId, String &deviceId, String &deviceSerial, String &deviceName, DeviceService &deviceService)
 {
     this->userId = userId;
     this->deviceId = deviceId;
     this->deviceSerial = deviceSerial;
     this->deviceName = deviceName;
     this->attachmentSlots = 0;
+    this->deviceService = &deviceService;
 }
 
 void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
@@ -37,7 +38,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
         return;
     }
 
-    if (messageType == "ListDeviceAttachmentsResponse")
+    if (messageType == "ListDeviceAttachmentsResult")
     {
         attachmentSlots = 0;
         int attachmentCount = int(dynamicJsonDocument["AttachmentCount"]);
@@ -57,7 +58,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
         return;
     }
 
-    if (messageType == "DeviceAttachmentCreatedNotification")
+    if (messageType == "DeviceAttachmentCreatedHardwareNotification")
     {
         String ownerDeviceId = String(dynamicJsonDocument["OwnerDeviceId"]);
         if (ownerDeviceId != deviceId || attachmentSlots > 9)
@@ -82,7 +83,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
         return;
     }
 
-    if (messageType == "DeviceAttachmentRemovedNotification")
+    if (messageType == "DeviceAttachmentRemovedHardwareNotification")
     {
         String id = String(dynamicJsonDocument["Id"]);
 
@@ -91,7 +92,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
         return;
     }
 
-    if (messageType == "DeviceAttachmentStateChangedNotification")
+    if (messageType == "DeviceAttachmentStateChangedHardwareNotification")
     {
         String id = String(dynamicJsonDocument["Id"]);
 
@@ -119,11 +120,42 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
         return;
     }
+
+    if (messageType == "ActivateDeviceAttachmentHardwareCommand")
+    {
+        measure();
+    }
 }
 
-void DeviceModel::tryMeasure(DeviceService &deviceService)
+void DeviceModel::TryCreate()
 {
-    Serial.println("tryMeasure");
+    if (!IsCreated)
+    {
+        Serial.println("Creating device");
+        deviceService->CreateDevice(userId, deviceId, deviceSerial, deviceName);
+    }
+    else
+    {
+        Serial.println("Device already created");
+    }
+}
+
+void DeviceModel::TryConnect()
+{
+    if (!IsConnected)
+    {
+        Serial.println("Connecting device");
+        deviceService->ConnectDevice(userId, deviceId, deviceSerial);
+    }
+    else
+    {
+        Serial.println("Device already connected");
+    }
+}
+
+void DeviceModel::measure()
+{
+    Serial.println("measure");
     String percent = "%";
 
     for (int i = 0; i < attachmentSlots; i++)
@@ -131,7 +163,7 @@ void DeviceModel::tryMeasure(DeviceService &deviceService)
         if (attachments[i]->ShouldMeasure())
         {
             float measurement = attachments[i]->Measure();
-            deviceService.RecordMeasurement(userId, deviceId, attachments[i]->Id, measurement, percent);
+            deviceService->RecordMeasurement(userId, deviceId, attachments[i]->Id, measurement, percent);
         }
     }
 }

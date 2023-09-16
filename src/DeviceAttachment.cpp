@@ -25,6 +25,7 @@ float DeviceAttachment::Measure()
 
   digitalWrite(PowerPin, HIGH);
   delay(200);
+  
   int analogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
   int analogMeasurement = analogRead(analogInPin);
   digitalWrite(PowerPin, LOW);
