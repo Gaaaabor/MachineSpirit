@@ -13,7 +13,7 @@ public:
   DeviceService(WebSocketsClient &webSocketClient);
   void CreateDevice(String &userId, String &deviceId, String &deviceSerial, String &deviceName);
   void ConnectDevice(String &userId, String &deviceId, String &deviceSerial);
-  void VerifyDevice(String &userId, String &deviceId);
+  void VerifyDevice(String &userId, String &deviceId, String &passphrase);
   void RecordMeasurement(String &userId, String &deviceId, String &deviceAttachmentId, long measurementValue, String &unitCode);
   void RecordRange(String &userId, String &deviceId, String &deviceAttachmentId, long measurementValue);
   void RecordSwitch(String &userId, String &deviceId, String &deviceAttachmentId, bool measurementValue);

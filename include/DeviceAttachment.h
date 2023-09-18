@@ -10,8 +10,8 @@ class DeviceAttachment
     unsigned long lastMeasureTime;
   public:
     String Id;
-    String OwnerUserId;
-    String OwnerDeviceSerial;
+    String UserId;
+    String DeviceSerial;
     String AttachmentName;
     String AttachmentSerial;
     float MeasureState;
@@ -21,7 +21,7 @@ class DeviceAttachment
     int PowerPin;
     unsigned long MeasurementFrequency;
 
-    DeviceAttachment(String id, String ownerUserId, String ownerDeviceSerial, String attachmentName, String attachmentSerial, String capability, int powerPin, unsigned long measurementFrequency);
+    DeviceAttachment(String id, String userId, String deviceSerial, String attachmentName, String attachmentSerial, String capability, int powerPin, unsigned long measurementFrequency);
     float Measure();
     bool Toggle(bool value);
     float Dim(float value);

@@ -28,8 +28,6 @@ void DeviceService::CreateDevice(String &userId, String &deviceId, String &devic
   Serial.println(message);
 
   webSocketsClient->sendTXT(message);
-
-  Serial.println("Creation sent:");  
 }
 
 void DeviceService::ConnectDevice(String &userId, String &deviceId, String &deviceSerial)
@@ -43,25 +41,27 @@ void DeviceService::ConnectDevice(String &userId, String &deviceId, String &devi
 
   String message;
   serializeJson(doc, message);
-  webSocketsClient->sendTXT(message);
 
-  Serial.println("Connecting device");
+  Serial.println(message);
+
+  webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::VerifyDevice(String &userId, String &deviceId)
+void DeviceService::VerifyDevice(String &userId, String &deviceId, String &passphrase)
 {
   DynamicJsonDocument doc(1024);
 
   doc["MessageType"] = "DeviceVerificationCommand";
   doc["UserId"] = userId;
   doc["DeviceId"] = deviceId;
-  doc["Passphrase"] = "pass";
+  doc["Passphrase"] = passphrase;
 
   String message;
   serializeJson(doc, message);
-  webSocketsClient->sendTXT(message);
 
-  Serial.println("Verifing device");
+  Serial.println(message);
+
+  webSocketsClient->sendTXT(message);
 }
 
 void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &deviceAttachmentId, long measurementValue, String &unitCode)
@@ -77,9 +77,10 @@ void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &
 
   String message;
   serializeJson(doc, message);
-  webSocketsClient->sendTXT(message);
 
-  Serial.println("Sending RecordMeasurementCommand");
+  Serial.println(message);
+
+  webSocketsClient->sendTXT(message);
 }
 
 void DeviceService::RecordRange(String &userId, String &deviceId, String &deviceAttachmentId, long measurementValue)
@@ -94,9 +95,10 @@ void DeviceService::RecordRange(String &userId, String &deviceId, String &device
 
   String message;
   serializeJson(doc, message);
-  webSocketsClient->sendTXT(message);
 
-  Serial.println("Sending RecordRangeCommand");
+  Serial.println(message);
+
+  webSocketsClient->sendTXT(message);
 }
 
 void DeviceService::RecordSwitch(String &userId, String &deviceId, String &deviceAttachmentId, bool measurementValue)
@@ -111,9 +113,10 @@ void DeviceService::RecordSwitch(String &userId, String &deviceId, String &devic
 
   String message;
   serializeJson(doc, message);
-  webSocketsClient->sendTXT(message);
 
-  Serial.println("Sending RecordSwitchCommand");
+  Serial.println(message);
+
+  webSocketsClient->sendTXT(message);
 }
 
 void DeviceService::ListDeviceAttachments(String &userId, String &deviceId)
@@ -126,7 +129,8 @@ void DeviceService::ListDeviceAttachments(String &userId, String &deviceId)
 
   String message;
   serializeJson(doc, message);
-  webSocketsClient->sendTXT(message);
 
-  Serial.println("Sending ListDeviceAttachmentsQuery");
+  Serial.println(message);
+
+  webSocketsClient->sendTXT(message);
 }

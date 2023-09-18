@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <EEPROM.h>
 #include "DeviceAttachment.h"
 #include "DeviceService.h"
 
@@ -14,6 +15,31 @@ DeviceModel::DeviceModel(String &userId, String &deviceId, String &deviceSerial,
     this->deviceName = deviceName;
     this->attachmentSlots = 0;
     this->deviceService = &deviceService;
+}
+
+void SaveToEEPROM(void *data_source, size_t size)
+{
+    EEPROM.begin(512);
+    delay(500);
+
+    for (size_t i = 0; i < size; i++)
+    {
+        char data = ((char *)data_source)[i];
+        EEPROM.write(i, data);
+    }
+    EEPROM.commit();
+}
+
+void LoadFromEEPROM(void *data_dest, size_t size)
+{
+    EEPROM.begin(512);
+    delay(500);
+
+    for (size_t i = 0; i < size; i++)
+    {
+        char data = EEPROM.read(i);
+        ((char *)data_dest)[i] = data;
+    }
 }
 
 void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
@@ -34,12 +60,14 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
     if (messageType == "DeviceVerificationRequestedHardwareNotification")
     {
-        // TODO: Start device verification flow
+        IsVerificationStarted = true;
         return;
     }
 
     if (messageType == "ListDeviceAttachmentsResult")
     {
+        IsAttachmentsListed = true;
+
         attachmentSlots = 0;
         int attachmentCount = int(dynamicJsonDocument["AttachmentCount"]);
         for (int i = 0; i < attachmentCount; i++)
@@ -60,9 +88,10 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
     if (messageType == "DeviceAttachmentCreatedHardwareNotification")
     {
-        String ownerDeviceId = String(dynamicJsonDocument["OwnerDeviceId"]);
-        if (ownerDeviceId != deviceId || attachmentSlots > 9)
+        String deviceId = String(dynamicJsonDocument["DeviceId"]);
+        if (this->deviceId != deviceId || this->attachmentSlots > 9)
         {
+            Serial.println("Device id mismatch or slots full, DeviceId: " + this->deviceId + " Received deviceId: " + deviceId + ", Slots: 9/" + attachmentSlots);
             return;
         }
 
@@ -123,7 +152,34 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
     if (messageType == "ActivateDeviceAttachmentHardwareCommand")
     {
-        measure();
+        // measure();
+        return;
+    }
+
+    if (messageType == "DeviceVerificationResultHardwareNotification")
+    {
+        Serial.flush();
+
+        IsVerified = true;
+        String passphrase = String(dynamicJsonDocument["Passphrase"]);
+
+        Serial.println("Got pass: " + passphrase);
+
+        if (passphrase == "")
+        {
+            return;
+        }
+
+        struct
+        {
+            char pass[37] = "";
+        } data;
+
+        strcpy(data.pass, passphrase.c_str());
+
+        SaveToEEPROM(&data, sizeof(data));
+
+        return;
     }
 }
 
@@ -153,6 +209,46 @@ void DeviceModel::TryConnect()
     }
 }
 
+void DeviceModel::TryVerifyFromRom()
+{
+    if (!IsCreated || !IsConnected || IsVerified)
+    {
+        return;
+    }
+
+    struct
+    {
+        char pass[37] = "";
+    } data;
+
+    LoadFromEEPROM(&data, sizeof(data));
+    String passphrase = String(data.pass);
+
+    Serial.println("Read pass from eeprom: " + passphrase);
+
+    if (passphrase == "")
+    {
+        return;
+    }
+
+    deviceService->VerifyDevice(userId, deviceId, passphrase);
+}
+
+void DeviceModel::Verify(String &passphrase)
+{
+    deviceService->VerifyDevice(userId, deviceId, passphrase);
+    IsVerificationStarted = false;
+}
+
+void DeviceModel::TryListDeviceAttachments()
+{
+    if (!IsAttachmentsListed && IsVerified)
+    {
+        Serial.println("Listing device attachments");
+        deviceService->ListDeviceAttachments(userId, deviceId);
+    }
+}
+
 void DeviceModel::measure()
 {
     Serial.println("measure");
@@ -164,6 +260,7 @@ void DeviceModel::measure()
         {
             float measurement = attachments[i]->Measure();
             deviceService->RecordMeasurement(userId, deviceId, attachments[i]->Id, measurement, percent);
+            continue;
         }
     }
 }

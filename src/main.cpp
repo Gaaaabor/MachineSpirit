@@ -1,6 +1,8 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
+#include <uri/UriBraces.h>
 
 #include "DeviceModel.h"
 
@@ -9,6 +11,7 @@ const String wifiPassword = "PLACEHOLDER";
 const String websocketAddress = "PLACEHOLDER";
 const uint16_t websocketPort = 80;
 bool isWebsocketConnected = false;
+bool isServerStarted = false;
 unsigned long previousMillis = 0;
 const long interval = 5000;
 
@@ -20,10 +23,11 @@ String deviceName = "PLACEHOLDER";
 WebSocketsClient webSocketClient;
 DeviceService deviceService(webSocketClient);
 DeviceModel deviceModel(userId, deviceId, deviceSerial, deviceName, deviceService);
+ESP8266WebServer server(80);
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
 {
-  DynamicJsonDocument doc(1024);
+  DynamicJsonDocument doc(2048);
 
   switch (type)
   {
@@ -40,7 +44,7 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     break;
 
   case WStype_TEXT:
-    Serial.printf("[WSc] got text: %s\n", payload);
+    Serial.printf("[WSc] got text: %u\n", length);
     deserializeJson(doc, payload);
     deviceModel.Tell(doc);
     break;
@@ -79,6 +83,18 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
   }
 }
 
+void handle_Verify()
+{
+  String passphrase = server.pathArg(0);
+  Serial.println("Webserver received /verify/" + passphrase);
+  server.send(200, "text/html", "Thanks for the passphrase: " + passphrase);
+
+  deviceModel.Verify(passphrase);
+
+  Serial.println("Closing webserver");
+  server.close();
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -106,6 +122,8 @@ void setup()
   webSocketClient.onEvent(webSocketEvent);
 
   Serial.println("WebSocket connected");
+
+  server.on(UriBraces("/verify/{}"), handle_Verify);
 }
 
 void timedStuff()
@@ -127,10 +145,25 @@ void timedStuff()
 
   deviceModel.TryCreate();
   deviceModel.TryConnect();
+  deviceModel.TryVerifyFromRom();
+  deviceModel.TryListDeviceAttachments();  
 }
 
 void loop()
 {
   webSocketClient.loop();
+
+  if (isServerStarted)
+  {
+    server.handleClient();
+  }
+
+  if (deviceModel.IsVerificationStarted && !isServerStarted)
+  {
+    Serial.println("Starting webserver");
+    isServerStarted = true;
+    server.begin();
+  }
+
   timedStuff();
 }
