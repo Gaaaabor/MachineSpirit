@@ -21,10 +21,10 @@ class DeviceAttachment
     int PowerPin;
     unsigned long MeasurementFrequency;
 
-    DeviceAttachment(String id, String userId, String deviceSerial, String attachmentName, String attachmentSerial, String capability, int powerPin, unsigned long measurementFrequency);
+    DeviceAttachment(String id, String userId, String deviceSerial, String attachmentName, String attachmentSerial, String capability, int powerPin, unsigned long measurementFrequency);    
     float Measure();
-    bool Toggle(bool value);
-    float Dim(float value);
+    bool Switch(bool value);
+    float Range(float value);
     bool ShouldMeasure();
 };
 #endif

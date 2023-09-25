@@ -64,7 +64,7 @@ void DeviceService::VerifyDevice(String &userId, String &deviceId, String &passp
   webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &deviceAttachmentId, long measurementValue, String &unitCode)
+void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue, String &unitCode)
 {
   DynamicJsonDocument doc(1024);
 
@@ -83,7 +83,7 @@ void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &
   webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::RecordRange(String &userId, String &deviceId, String &deviceAttachmentId, long measurementValue)
+void DeviceService::RecordRange(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue)
 {
   DynamicJsonDocument doc(1024);
 

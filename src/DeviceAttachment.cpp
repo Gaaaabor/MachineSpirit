@@ -11,7 +11,7 @@ DeviceAttachment::DeviceAttachment(String id, String userId, String deviceSerial
   Capability = capability;
   PowerPin = powerPin;
   MeasurementFrequency = measurementFrequency;
-  lastMeasureTime = 0;  
+  lastMeasureTime = 0;
 
   pinMode(PowerPin, OUTPUT);
 }
@@ -25,7 +25,7 @@ float DeviceAttachment::Measure()
 
   digitalWrite(PowerPin, HIGH);
   delay(200);
-  
+
   int analogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
   int analogMeasurement = analogRead(analogInPin);
   digitalWrite(PowerPin, LOW);
@@ -33,14 +33,14 @@ float DeviceAttachment::Measure()
   return MeasureState;
 }
 
-bool DeviceAttachment::Toggle(bool value)
+bool DeviceAttachment::Switch(bool value)
 {
-  if (Capability != "BinarySwitch") // Todo: use byte (0)
+  if (Capability != "Switch") // Todo: use byte (0)
   {
     return false;
   }
 
-  Serial.println("Toggle!");
+  Serial.println("Switch!");
 
   SwitchState = value;
   if (SwitchState)
@@ -55,12 +55,14 @@ bool DeviceAttachment::Toggle(bool value)
   return SwitchState;
 }
 
-float DeviceAttachment::Dim(float value)
+float DeviceAttachment::Range(float value)
 {
-  if (Capability != "Dim") // Todo: use byte (1)
+  if (Capability != "Range") // Todo: use byte (1)
   {
     return 0;
   }
+
+  Serial.println("Range!");
 
   if (value > 255)
   {

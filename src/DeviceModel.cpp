@@ -81,6 +81,19 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
             attachments[i] = new DeviceAttachment(id, userId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
             attachmentSlots++;
+
+            if (capability == "Switch")
+            {
+                String state = String(dynamicJsonDocument["Attachments"][i]["State"]["Value"]);
+                if (state == "true" || state == "True")
+                {
+                    attachments[i]->Switch(true);
+                }
+                else
+                {
+                    attachments[i]->Switch(false);
+                }
+            }
         }
 
         return;
@@ -132,13 +145,13 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
                 Serial.println("Found: " + String(attachments[i]->Capability));
 
                 String capability = attachments[i]->Capability;
-                if (capability == "BinarySwitch")
+                if (capability == "Switch")
                 {
-                    attachments[i]->Toggle(String(dynamicJsonDocument["State"]["Value"]) == "True");
+                    attachments[i]->Switch(String(dynamicJsonDocument["State"]["Value"]) == "True");
                 }
                 else if (capability == "Dim")
                 {
-                    attachments[i]->Dim(float(dynamicJsonDocument["State"]["Value"]));
+                    attachments[i]->Range(float(dynamicJsonDocument["State"]["Value"]));
                 }
             }
             else
@@ -152,7 +165,37 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
     if (messageType == "ActivateDeviceAttachmentHardwareCommand")
     {
-        // measure();
+        String deviceAttachmentId = String(dynamicJsonDocument["DeviceAttachmentId"]);        
+        String percent = "%";
+
+        for (int i = 0; i < attachmentSlots; i++)
+        {
+            if (attachments[i]->Id == deviceAttachmentId)
+            {
+                if (attachments[i]->Capability == "Measure")
+                {
+                    float measurement = attachments[i]->Measure();
+                    deviceService->RecordMeasurement(userId, deviceId, attachments[i]->Id, measurement, percent);
+                    continue;
+                }
+
+                if (attachments[i]->Capability == "Switch")
+                {
+                    bool triggeredValue = dynamicJsonDocument["TriggeredSwitchValue"].as<bool>();
+                    bool measurement = attachments[i]->Switch(triggeredValue);
+                    deviceService->RecordSwitch(userId, deviceId, attachments[i]->Id, measurement);
+                    continue;
+                }
+
+                if (attachments[i]->Capability == "Range")
+                {
+                    float triggeredValue = dynamicJsonDocument["TriggeredRangeValue"].as<float>();
+                    float measurement = attachments[i]->Range(triggeredValue);
+                    deviceService->RecordRange(userId, deviceId, attachments[i]->Id, measurement);
+                    continue;
+                }
+            }
+        }
         return;
     }
 
