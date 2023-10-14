@@ -9,6 +9,7 @@
 const String wifiSsid = "PLACEHOLDER";
 const String wifiPassword = "PLACEHOLDER";
 const String websocketAddress = "PLACEHOLDER";
+const String connectionId = "PLACEHOLDER";
 const uint16_t websocketPort = 80;
 bool isWebsocketConnected = false;
 bool isServerStarted = false;
@@ -36,6 +37,7 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     isWebsocketConnected = false;
     deviceModel.IsCreated = false;
     deviceModel.IsConnected = false;
+    deviceModel.IsVerified = false;
     break;
 
   case WStype_CONNECTED:
@@ -118,7 +120,7 @@ void setup()
   Serial.println("IP address:");
   Serial.println(WiFi.localIP());
 
-  webSocketClient.begin("devices.cloudpie.dev", 80, "/");
+  webSocketClient.begin(websocketAddress, 80, connectionId);
   webSocketClient.onEvent(webSocketEvent);
 
   Serial.println("WebSocket connected");
