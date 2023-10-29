@@ -64,34 +64,42 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
         return;
     }
 
-    if (messageType == "ListDeviceAttachmentsResult")
+    if (messageType == "ListDeviceAttachmentsHardwareQueryResult")
     {
+        Serial.println("ListDeviceAttachmentsHardwareQueryResult");
+
         IsAttachmentsListed = true;
 
         attachmentSlots = 0;
-        int attachmentCount = int(dynamicJsonDocument["AttachmentCount"]);
+        int attachmentCount = int(dynamicJsonDocument["DeviceAttachmentCount"]);
+
+        Serial.println("ListDeviceAttachmentsHardwareQueryResult Count: " + String(attachmentCount));
+
         for (int i = 0; i < attachmentCount; i++)
         {
-            String id = String(dynamicJsonDocument["Attachments"][i]["Id"]);
-            String attachmentName = String(dynamicJsonDocument["Attachments"][i]["AttachmentName"]);
-            String attachmentSerial = String(dynamicJsonDocument["Attachments"][i]["Serial"]);
-            String capability = String(dynamicJsonDocument["Attachments"][i]["Capability"]);
-            int powerPin = int(dynamicJsonDocument["Attachments"][i]["PowerPin"]);
-            unsigned long measurementFrequency = (unsigned long)(dynamicJsonDocument["Attachments"][i]["MeasurementFrequency"]);
+            String id = String(dynamicJsonDocument["DeviceAttachments"][i]["Id"]);
+            String name = String(dynamicJsonDocument["DeviceAttachments"][i]["Name"]);
+            String serial = String(dynamicJsonDocument["DeviceAttachments"][i]["Serial"]);
+            String capability = String(dynamicJsonDocument["DeviceAttachments"][i]["Capability"]);
+            int powerPin = int(dynamicJsonDocument["DeviceAttachments"][i]["PowerPin"]);
+            unsigned long measurementFrequency = (unsigned long)(dynamicJsonDocument["DeviceAttachments"][i]["MeasurementFrequency"]);
 
-            attachments[i] = new DeviceAttachment(id, userId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
+            deviceAttachments[i] = new DeviceAttachment(id, userId, deviceSerial, name, serial, capability, powerPin, measurementFrequency);
+
+            Serial.println("Added to slot: " + String(attachmentSlots));
+
             attachmentSlots++;
 
             if (capability == "Switch")
             {
-                String state = String(dynamicJsonDocument["Attachments"][i]["State"]["Value"]);
-                if (state == "true" || state == "True")
+                String state = String(dynamicJsonDocument["DeviceAttachments"][i]["State"]["Value"]);
+                if (state == "True")
                 {
-                    attachments[i]->Switch(true);
+                    deviceAttachments[i]->Switch(true);
                 }
                 else
                 {
-                    attachments[i]->Switch(false);
+                    deviceAttachments[i]->Switch(false);
                 }
             }
         }
@@ -104,22 +112,17 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
         String deviceId = String(dynamicJsonDocument["DeviceId"]);
         if (this->deviceId != deviceId || this->attachmentSlots > 9)
         {
-            Serial.println("Device id mismatch or slots full, DeviceId: " + this->deviceId + " Received deviceId: " + deviceId + ", Slots: 9/" + attachmentSlots);
             return;
         }
 
-        Serial.println("Deserializing...");
-
         String id = String(dynamicJsonDocument["Id"]);
-        String attachmentName = String(dynamicJsonDocument["AttachmentName"]);
+        String attachmentName = String(dynamicJsonDocument["Name"]);
         String attachmentSerial = String(dynamicJsonDocument["Serial"]);
         String capability = String(dynamicJsonDocument["Capability"]);
         int powerPin = int(dynamicJsonDocument["PowerPin"]);
         unsigned long measurementFrequency = (unsigned long)(dynamicJsonDocument["MeasurementFrequency"]);
 
-        attachments[attachmentSlots] = new DeviceAttachment(id, userId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
-
-        Serial.println("Added to slot: " + String(attachmentSlots));
+        deviceAttachments[attachmentSlots] = new DeviceAttachment(id, userId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
 
         attachmentSlots++;
         return;
@@ -137,26 +140,19 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
     if (messageType == "DeviceAttachmentStateChangedHardwareNotification")
     {
         String id = String(dynamicJsonDocument["Id"]);
-
         for (int i = 0; i < attachmentSlots; i++)
         {
-            if (attachments[i]->Id.equals(id))
+            if (deviceAttachments[i]->Id.equals(id))
             {
-                Serial.println("Found: " + String(attachments[i]->Capability));
-
-                String capability = attachments[i]->Capability;
+                String capability = deviceAttachments[i]->Capability;
                 if (capability == "Switch")
                 {
-                    attachments[i]->Switch(String(dynamicJsonDocument["State"]["Value"]) == "True");
+                    deviceAttachments[i]->Switch(String(dynamicJsonDocument["State"]["Value"]) == "True");
                 }
                 else if (capability == "Dim")
                 {
-                    attachments[i]->Range(float(dynamicJsonDocument["State"]["Value"]));
+                    deviceAttachments[i]->Range(float(dynamicJsonDocument["State"]["Value"]));
                 }
-            }
-            else
-            {
-                Serial.println("Mismatch " + attachments[i]->Id + " vs " + id);
             }
         }
 
@@ -165,33 +161,33 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
     if (messageType == "ActivateDeviceAttachmentHardwareCommand")
     {
-        String deviceAttachmentId = String(dynamicJsonDocument["DeviceAttachmentId"]);        
+        String deviceAttachmentId = String(dynamicJsonDocument["DeviceAttachmentId"]);
         String percent = "%";
 
         for (int i = 0; i < attachmentSlots; i++)
         {
-            if (attachments[i]->Id == deviceAttachmentId)
+            if (deviceAttachments[i]->Id == deviceAttachmentId)
             {
-                if (attachments[i]->Capability == "Measure")
+                if (deviceAttachments[i]->Capability == "Measure")
                 {
-                    float measurement = attachments[i]->Measure();
-                    deviceService->RecordMeasurement(userId, deviceId, attachments[i]->Id, measurement, percent);
+                    float measurement = deviceAttachments[i]->Measure();
+                    deviceService->RecordMeasurement(userId, deviceId, deviceAttachments[i]->Id, measurement, percent);
                     continue;
                 }
 
-                if (attachments[i]->Capability == "Switch")
+                if (deviceAttachments[i]->Capability == "Switch")
                 {
                     bool triggeredValue = dynamicJsonDocument["TriggeredSwitchValue"].as<bool>();
-                    bool measurement = attachments[i]->Switch(triggeredValue);
-                    deviceService->RecordSwitch(userId, deviceId, attachments[i]->Id, measurement);
+                    bool measurement = deviceAttachments[i]->Switch(triggeredValue);
+                    deviceService->RecordSwitch(userId, deviceId, deviceAttachments[i]->Id, measurement);
                     continue;
                 }
 
-                if (attachments[i]->Capability == "Range")
+                if (deviceAttachments[i]->Capability == "Range")
                 {
                     float triggeredValue = dynamicJsonDocument["TriggeredRangeValue"].as<float>();
-                    float measurement = attachments[i]->Range(triggeredValue);
-                    deviceService->RecordRange(userId, deviceId, attachments[i]->Id, measurement);
+                    float measurement = deviceAttachments[i]->Range(triggeredValue);
+                    deviceService->RecordRange(userId, deviceId, deviceAttachments[i]->Id, measurement);
                     continue;
                 }
             }
@@ -205,8 +201,6 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
         IsVerified = true;
         String passphrase = String(dynamicJsonDocument["Passphrase"]);
-
-        Serial.println("Got pass: " + passphrase);
 
         if (passphrase == "")
         {
@@ -266,9 +260,6 @@ void DeviceModel::TryVerifyFromRom()
 
     LoadFromEEPROM(&data, sizeof(data));
     String passphrase = String(data.pass);
-
-    Serial.println("Read pass from eeprom: " + passphrase);
-
     if (passphrase == "")
     {
         return;
@@ -299,10 +290,10 @@ void DeviceModel::measure()
 
     for (int i = 0; i < attachmentSlots; i++)
     {
-        if (attachments[i]->ShouldMeasure())
+        if (deviceAttachments[i]->ShouldMeasure())
         {
-            float measurement = attachments[i]->Measure();
-            deviceService->RecordMeasurement(userId, deviceId, attachments[i]->Id, measurement, percent);
+            float measurement = deviceAttachments[i]->Measure();
+            deviceService->RecordMeasurement(userId, deviceId, deviceAttachments[i]->Id, measurement, percent);
             continue;
         }
     }

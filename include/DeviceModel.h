@@ -15,7 +15,7 @@ private:
     String deviceSerial;
     String deviceName;
     int attachmentSlots;
-    DeviceAttachment *attachments[9];
+    DeviceAttachment *deviceAttachments[9];
     DeviceService *deviceService;
 
     void measure();

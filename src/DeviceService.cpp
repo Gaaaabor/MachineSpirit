@@ -123,7 +123,7 @@ void DeviceService::ListDeviceAttachments(String &userId, String &deviceId)
 {
   DynamicJsonDocument doc(1024);
 
-  doc["MessageType"] = "ListDeviceAttachmentsQuery";
+  doc["MessageType"] = "ListDeviceAttachmentsHardwareQuery";
   doc["UserId"] = userId;
   doc["DeviceId"] = deviceId;
 
