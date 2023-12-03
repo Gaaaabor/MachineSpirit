@@ -42,6 +42,11 @@ bool DeviceAttachment::Switch(bool value)
 
   Serial.println("Switch!");
 
+  if (SwitchState == value)
+  {
+    return SwitchState;
+  }
+
   SwitchState = value;
   if (SwitchState)
   {

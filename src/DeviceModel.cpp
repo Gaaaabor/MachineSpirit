@@ -66,14 +66,10 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
 
     if (messageType == "ListDeviceAttachmentsHardwareQueryResult")
     {
-        Serial.println("ListDeviceAttachmentsHardwareQueryResult");
-
         IsAttachmentsListed = true;
 
         attachmentSlots = 0;
-        int attachmentCount = int(dynamicJsonDocument["DeviceAttachmentCount"]);
-
-        Serial.println("ListDeviceAttachmentsHardwareQueryResult Count: " + String(attachmentCount));
+        int attachmentCount = int(dynamicJsonDocument["DeviceAttachmentCount"]);       
 
         for (int i = 0; i < attachmentCount; i++)
         {
@@ -84,9 +80,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
             int powerPin = int(dynamicJsonDocument["DeviceAttachments"][i]["PowerPin"]);
             unsigned long measurementFrequency = (unsigned long)(dynamicJsonDocument["DeviceAttachments"][i]["MeasurementFrequency"]);
 
-            deviceAttachments[i] = new DeviceAttachment(id, userId, deviceSerial, name, serial, capability, powerPin, measurementFrequency);
-
-            Serial.println("Added to slot: " + String(attachmentSlots));
+            deviceAttachments[i] = new DeviceAttachment(id, userId, deviceSerial, name, serial, capability, powerPin, measurementFrequency);            
 
             attachmentSlots++;
 
@@ -163,6 +157,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
     {
         String deviceAttachmentId = String(dynamicJsonDocument["DeviceAttachmentId"]);
         String percent = "%";
+        String requestId = String(dynamicJsonDocument["RequestId"]);
 
         for (int i = 0; i < attachmentSlots; i++)
         {
@@ -171,7 +166,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
                 if (deviceAttachments[i]->Capability == "Measure")
                 {
                     float measurement = deviceAttachments[i]->Measure();
-                    deviceService->RecordMeasurement(userId, deviceId, deviceAttachments[i]->Id, measurement, percent);
+                    deviceService->RecordMeasurement(userId, deviceId, deviceAttachments[i]->Id, measurement, percent, requestId);
                     continue;
                 }
 
@@ -179,7 +174,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
                 {
                     bool triggeredValue = dynamicJsonDocument["TriggeredSwitchValue"].as<bool>();
                     bool measurement = deviceAttachments[i]->Switch(triggeredValue);
-                    deviceService->RecordSwitch(userId, deviceId, deviceAttachments[i]->Id, measurement);
+                    deviceService->RecordSwitch(userId, deviceId, deviceAttachments[i]->Id, measurement, requestId);
                     continue;
                 }
 
@@ -187,7 +182,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
                 {
                     float triggeredValue = dynamicJsonDocument["TriggeredRangeValue"].as<float>();
                     float measurement = deviceAttachments[i]->Range(triggeredValue);
-                    deviceService->RecordRange(userId, deviceId, deviceAttachments[i]->Id, measurement);
+                    deviceService->RecordRange(userId, deviceId, deviceAttachments[i]->Id, measurement, requestId);
                     continue;
                 }
             }
@@ -281,19 +276,24 @@ void DeviceModel::TryListDeviceAttachments()
         Serial.println("Listing device attachments");
         deviceService->ListDeviceAttachments(userId, deviceId);
     }
+    else
+    {
+        Serial.println("Device attachments already listed");        
+    }
 }
 
 void DeviceModel::measure()
 {
     Serial.println("measure");
     String percent = "%";
+    String requestId = "{E7319AB6-24FB-41A2-8302-9D162F3437D3}"; // Nothing special, just wanted to fill with something
 
     for (int i = 0; i < attachmentSlots; i++)
     {
         if (deviceAttachments[i]->ShouldMeasure())
         {
             float measurement = deviceAttachments[i]->Measure();
-            deviceService->RecordMeasurement(userId, deviceId, deviceAttachments[i]->Id, measurement, percent);
+            deviceService->RecordMeasurement(userId, deviceId, deviceAttachments[i]->Id, measurement, percent, requestId);
             continue;
         }
     }

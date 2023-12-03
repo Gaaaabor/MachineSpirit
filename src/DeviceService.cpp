@@ -64,7 +64,7 @@ void DeviceService::VerifyDevice(String &userId, String &deviceId, String &passp
   webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue, String &unitCode)
+void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue, String &unitCode, String &requestId)
 {
   DynamicJsonDocument doc(1024);
 
@@ -74,6 +74,7 @@ void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &
   doc["DeviceAttachmentId"] = deviceAttachmentId;
   doc["Value"] = measurementValue;
   doc["UnitCode"] = unitCode;
+  doc["RequestId"] = requestId;
 
   String message;
   serializeJson(doc, message);
@@ -83,7 +84,7 @@ void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &
   webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::RecordRange(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue)
+void DeviceService::RecordRange(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue, String &requestId)
 {
   DynamicJsonDocument doc(1024);
 
@@ -92,6 +93,7 @@ void DeviceService::RecordRange(String &userId, String &deviceId, String &device
   doc["DeviceId"] = deviceId;
   doc["DeviceAttachmentId"] = deviceAttachmentId;
   doc["Value"] = measurementValue;
+  doc["RequestId"] = requestId;
 
   String message;
   serializeJson(doc, message);
@@ -101,7 +103,7 @@ void DeviceService::RecordRange(String &userId, String &deviceId, String &device
   webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::RecordSwitch(String &userId, String &deviceId, String &deviceAttachmentId, bool measurementValue)
+void DeviceService::RecordSwitch(String &userId, String &deviceId, String &deviceAttachmentId, bool measurementValue, String &requestId)
 {
   DynamicJsonDocument doc(1024);
 
@@ -110,6 +112,7 @@ void DeviceService::RecordSwitch(String &userId, String &deviceId, String &devic
   doc["DeviceId"] = deviceId;
   doc["DeviceAttachmentId"] = deviceAttachmentId;
   doc["Value"] = measurementValue;
+  doc["RequestId"] = requestId;
 
   String message;
   serializeJson(doc, message);
