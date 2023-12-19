@@ -7,12 +7,8 @@
 #include "DeviceAttachment.h"
 #include "DeviceService.h"
 
-DeviceModel::DeviceModel(String &userId, String &deviceId, String &deviceSerial, String &deviceName, DeviceService &deviceService)
+DeviceModel::DeviceModel(DeviceService &deviceService)
 {
-    this->userId = userId;
-    this->deviceId = deviceId;
-    this->deviceSerial = deviceSerial;
-    this->deviceName = deviceName;
     this->attachmentSlots = 0;
     this->deviceService = &deviceService;
 }
@@ -69,7 +65,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
         IsAttachmentsListed = true;
 
         attachmentSlots = 0;
-        int attachmentCount = int(dynamicJsonDocument["DeviceAttachmentCount"]);       
+        int attachmentCount = int(dynamicJsonDocument["DeviceAttachmentCount"]);
 
         for (int i = 0; i < attachmentCount; i++)
         {
@@ -79,8 +75,9 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
             String capability = String(dynamicJsonDocument["DeviceAttachments"][i]["Capability"]);
             int powerPin = int(dynamicJsonDocument["DeviceAttachments"][i]["PowerPin"]);
             unsigned long measurementFrequency = (unsigned long)(dynamicJsonDocument["DeviceAttachments"][i]["MeasurementFrequency"]);
+            String type = String(dynamicJsonDocument["DeviceAttachments"][i]["Type"]);
 
-            deviceAttachments[i] = new DeviceAttachment(id, userId, deviceSerial, name, serial, capability, powerPin, measurementFrequency);            
+            deviceAttachments[i] = new DeviceAttachment(id, userId, name, serial, capability, powerPin, measurementFrequency, type);
 
             attachmentSlots++;
 
@@ -104,7 +101,7 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
     if (messageType == "DeviceAttachmentCreatedHardwareNotification")
     {
         String deviceId = String(dynamicJsonDocument["DeviceId"]);
-        if (this->deviceId != deviceId || this->attachmentSlots > 9)
+        if (deviceId != deviceId || this->attachmentSlots > 9)
         {
             return;
         }
@@ -115,8 +112,9 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
         String capability = String(dynamicJsonDocument["Capability"]);
         int powerPin = int(dynamicJsonDocument["PowerPin"]);
         unsigned long measurementFrequency = (unsigned long)(dynamicJsonDocument["MeasurementFrequency"]);
+        String type = String(dynamicJsonDocument["Type"]);
 
-        deviceAttachments[attachmentSlots] = new DeviceAttachment(id, userId, deviceSerial, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency);
+        deviceAttachments[attachmentSlots] = new DeviceAttachment(id, userId, attachmentName, attachmentSerial, capability, powerPin, measurementFrequency, type);
 
         attachmentSlots++;
         return;
@@ -165,8 +163,8 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
             {
                 if (deviceAttachments[i]->Capability == "Measure")
                 {
-                    float measurement = deviceAttachments[i]->Measure();
-                    deviceService->RecordMeasurement(userId, deviceId, deviceAttachments[i]->Id, measurement, percent, requestId);
+                    MeasurementModel measurement = deviceAttachments[i]->Measure();
+                    deviceService->RecordMeasurement(requestId, userId, deviceId, deviceAttachments[i]->Id, measurement);
                     continue;
                 }
 
@@ -174,15 +172,15 @@ void DeviceModel::Tell(DynamicJsonDocument &dynamicJsonDocument)
                 {
                     bool triggeredValue = dynamicJsonDocument["TriggeredSwitchValue"].as<bool>();
                     bool measurement = deviceAttachments[i]->Switch(triggeredValue);
-                    deviceService->RecordSwitch(userId, deviceId, deviceAttachments[i]->Id, measurement, requestId);
+                    deviceService->RecordSwitch(requestId, userId, deviceId, deviceAttachments[i]->Id, measurement);
                     continue;
                 }
 
                 if (deviceAttachments[i]->Capability == "Range")
                 {
                     float triggeredValue = dynamicJsonDocument["TriggeredRangeValue"].as<float>();
-                    float measurement = deviceAttachments[i]->Range(triggeredValue);
-                    deviceService->RecordRange(userId, deviceId, deviceAttachments[i]->Id, measurement, requestId);
+                    MeasurementModel measurement = deviceAttachments[i]->Range(triggeredValue);
+                    deviceService->RecordRange(requestId, userId, deviceId, deviceAttachments[i]->Id, measurement);
                     continue;
                 }
             }
@@ -278,23 +276,22 @@ void DeviceModel::TryListDeviceAttachments()
     }
     else
     {
-        Serial.println("Device attachments already listed");        
+        Serial.println("Device attachments already listed");
     }
 }
 
-void DeviceModel::measure()
+void DeviceModel::_Measure()
 {
-    Serial.println("measure");
-    String percent = "%";
-    String requestId = "{E7319AB6-24FB-41A2-8302-9D162F3437D3}"; // Nothing special, just wanted to fill with something
+    Serial.println("Measure");
+
+    static String requestId = "{E7319AB6-24FB-41A2-8302-9D162F3437D3}"; // Nothing special, just wanted to fill with something
 
     for (int i = 0; i < attachmentSlots; i++)
     {
         if (deviceAttachments[i]->ShouldMeasure())
         {
-            float measurement = deviceAttachments[i]->Measure();
-            deviceService->RecordMeasurement(userId, deviceId, deviceAttachments[i]->Id, measurement, percent, requestId);
-            continue;
+            MeasurementModel measurement = deviceAttachments[i]->Measure();
+            deviceService->RecordMeasurement(requestId, userId, deviceId, deviceAttachments[i]->Id, measurement);
         }
     }
 }

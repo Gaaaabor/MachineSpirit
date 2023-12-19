@@ -2,6 +2,7 @@
 #ifndef DeviceService_h
 #define DeviceService_h
 
+#include "MeasurementModel.h"
 #include <WebSocketsClient.h>
 
 class DeviceService
@@ -14,9 +15,9 @@ public:
   void CreateDevice(String &userId, String &deviceId, String &deviceSerial, String &deviceName);
   void ConnectDevice(String &userId, String &deviceId, String &deviceSerial);
   void VerifyDevice(String &userId, String &deviceId, String &passphrase);
-  void RecordMeasurement(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue, String &unitCode, String &requestId);
-  void RecordRange(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue, String &requestId);
-  void RecordSwitch(String &userId, String &deviceId, String &deviceAttachmentId, bool measurementValue, String &requestId);
+  void RecordMeasurement(String &requestId, String &userId, String &deviceId, String &deviceAttachmentId, MeasurementModel &measurement);
+  void RecordRange(String &requestId, String &userId, String &deviceId, String &deviceAttachmentId, MeasurementModel &measurement);
+  void RecordSwitch(String &requestId, String &userId, String &deviceId, String &deviceAttachmentId, bool value);
   void ListDeviceAttachments(String &userId, String &deviceId);
 };
 #endif

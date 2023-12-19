@@ -2,7 +2,6 @@
 #include "DeviceService.h"
 
 #include <ArduinoJson.h>
-#include <ArduinoJson.h>
 #include <WebSocketsClient.h>
 
 DeviceService::DeviceService(WebSocketsClient &webSocketsClient)
@@ -64,17 +63,17 @@ void DeviceService::VerifyDevice(String &userId, String &deviceId, String &passp
   webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue, String &unitCode, String &requestId)
+void DeviceService::RecordMeasurement(String &requestId, String &userId, String &deviceId, String &deviceAttachmentId, MeasurementModel &measurement)
 {
   DynamicJsonDocument doc(1024);
 
   doc["MessageType"] = "RecordMeasurementCommand";
+  doc["RequestId"] = requestId;
   doc["UserId"] = userId;
   doc["DeviceId"] = deviceId;
   doc["DeviceAttachmentId"] = deviceAttachmentId;
-  doc["Value"] = measurementValue;
-  doc["UnitCode"] = unitCode;
-  doc["RequestId"] = requestId;
+  doc["Value"] = measurement.Value;
+  doc["UnitCode"] = measurement.UnitCode;
 
   String message;
   serializeJson(doc, message);
@@ -84,16 +83,17 @@ void DeviceService::RecordMeasurement(String &userId, String &deviceId, String &
   webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::RecordRange(String &userId, String &deviceId, String &deviceAttachmentId, float measurementValue, String &requestId)
+void DeviceService::RecordRange(String &requestId, String &userId, String &deviceId, String &deviceAttachmentId, MeasurementModel &measurement)
 {
   DynamicJsonDocument doc(1024);
 
   doc["MessageType"] = "RecordRangeCommand";
+  doc["RequestId"] = requestId;
   doc["UserId"] = userId;
   doc["DeviceId"] = deviceId;
   doc["DeviceAttachmentId"] = deviceAttachmentId;
-  doc["Value"] = measurementValue;
-  doc["RequestId"] = requestId;
+  doc["Value"] = measurement.Value;
+  doc["UnitCode"] = measurement.UnitCode;
 
   String message;
   serializeJson(doc, message);
@@ -103,16 +103,16 @@ void DeviceService::RecordRange(String &userId, String &deviceId, String &device
   webSocketsClient->sendTXT(message);
 }
 
-void DeviceService::RecordSwitch(String &userId, String &deviceId, String &deviceAttachmentId, bool measurementValue, String &requestId)
+void DeviceService::RecordSwitch(String &requestId, String &userId, String &deviceId, String &deviceAttachmentId, bool value)
 {
   DynamicJsonDocument doc(1024);
 
   doc["MessageType"] = "RecordSwitchCommand";
+  doc["RequestId"] = requestId;
   doc["UserId"] = userId;
   doc["DeviceId"] = deviceId;
   doc["DeviceAttachmentId"] = deviceAttachmentId;
-  doc["Value"] = measurementValue;
-  doc["RequestId"] = requestId;
+  doc["Value"] = value;
 
   String message;
   serializeJson(doc, message);

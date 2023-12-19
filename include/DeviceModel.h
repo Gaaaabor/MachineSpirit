@@ -10,15 +10,16 @@
 class DeviceModel
 {
 private:
-    String userId;
-    String deviceId;
-    String deviceSerial;
-    String deviceName;
+    String userId = "INSERT ID HERE";
+    String deviceId = "INSERT ID HERE";
+    String deviceSerial = "INSERT SERIAL HERE";
+    String deviceName = "INSERT NAME HERE";
+
     int attachmentSlots;
     DeviceAttachment *deviceAttachments[9];
     DeviceService *deviceService;
 
-    void measure();
+    void _Measure();
 
 public:
     bool IsCreated;
@@ -26,7 +27,7 @@ public:
     bool IsVerificationStarted;
     bool IsVerified;
     bool IsAttachmentsListed;
-    DeviceModel(String &userId, String &deviceId, String &deviceSerial, String &deviceName, DeviceService &deviceService);
+    DeviceModel(DeviceService &deviceService);
     void Tell(DynamicJsonDocument &dynamicJsonDocument);
     void TryCreate();
     void TryConnect();

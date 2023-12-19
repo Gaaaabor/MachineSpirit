@@ -1,36 +1,63 @@
 // DeviceAttachment.cpp
 #include "DeviceAttachment.h"
 
-DeviceAttachment::DeviceAttachment(String id, String userId, String deviceSerial, String attachmentName, String attachmentSerial, String capability, int powerPin, unsigned long measurementFrequency)
+DeviceAttachment::DeviceAttachment(
+    String id,
+    String userId,
+    String attachmentName,
+    String attachmentSerial,
+    String capability,
+    int powerPin,
+    unsigned long measurementFrequency,
+    String type)
 {
   Id = id;
   UserId = userId;
-  DeviceSerial = deviceSerial;
   AttachmentName = attachmentName;
   AttachmentSerial = attachmentSerial;
   Capability = capability;
   PowerPin = powerPin;
   MeasurementFrequency = measurementFrequency;
+  Type = type;
   lastMeasureTime = 0;
 
   pinMode(PowerPin, OUTPUT);
 }
 
-float DeviceAttachment::Measure()
+MeasurementModel DeviceAttachment::Measure()
 {
   if (Capability != "Measure") // Todo: use byte(2)
   {
-    return 0;
+    return MeasurementModel();
   }
 
-  digitalWrite(PowerPin, HIGH);
-  delay(200);
+  if (Type == "DHT11")
+  {
+    digitalWrite(PowerPin, HIGH);
+    delay(200);
 
-  int analogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
-  int analogMeasurement = analogRead(analogInPin);
-  digitalWrite(PowerPin, LOW);
-  MeasureState = (float)analogMeasurement;
-  return MeasureState;
+    int analogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
+    int analogMeasurement = analogRead(analogInPin);
+    digitalWrite(PowerPin, LOW);
+    MeasureState = (float)analogMeasurement;
+
+    return MeasurementModel(MeasureState, String("°C"));
+  }
+
+  if (Type == "HW390")
+  {
+    digitalWrite(PowerPin, HIGH);
+    delay(200);
+
+    int analogInPin = A0; // ESP8266 Analog Pin ADC0 = A0
+    int analogMeasurement = analogRead(analogInPin);
+    digitalWrite(PowerPin, LOW);
+    MeasureState = (float)analogMeasurement;
+
+    return MeasurementModel(MeasureState, String("%"));
+  }
+
+  return MeasurementModel();
 }
 
 bool DeviceAttachment::Switch(bool value)
@@ -60,11 +87,11 @@ bool DeviceAttachment::Switch(bool value)
   return SwitchState;
 }
 
-float DeviceAttachment::Range(float value)
+MeasurementModel DeviceAttachment::Range(float value)
 {
   if (Capability != "Range") // Todo: use byte (1)
   {
-    return 0;
+    return MeasurementModel();
   }
 
   Serial.println("Range!");
@@ -81,7 +108,8 @@ float DeviceAttachment::Range(float value)
   analogWrite(PowerPin, value);
 
   DimState = value;
-  return DimState;
+  MeasurementModel m(value, "RANGE");
+  return m;
 }
 
 bool DeviceAttachment::ShouldMeasure()

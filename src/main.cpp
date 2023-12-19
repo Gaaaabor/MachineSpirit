@@ -6,24 +6,19 @@
 
 #include "DeviceModel.h"
 
-const String wifiSsid = "PLACEHOLDER";
-const String wifiPassword = "PLACEHOLDER";
-const String websocketAddress = "PLACEHOLDER";
-const String connectionId = "PLACEHOLDER";
+const String wifiSsid = "INSERT SSID HERE";
+const String wifiPassword = "INSERT PASSWORD HERE";
+const String websocketAddress = "INSERT SOCKET ADDRESS HERE";
+const String connectionId = "INSERT CONNECTION ID HERE";
 const uint16_t websocketPort = 80;
 bool isWebsocketConnected = false;
 bool isServerStarted = false;
 unsigned long previousMillis = 0;
 const long interval = 5000;
 
-String userId = "PLACEHOLDER";
-String deviceId = "PLACEHOLDER";
-String deviceSerial = "PLACEHOLDER";
-String deviceName = "PLACEHOLDER";
-
 WebSocketsClient webSocketClient;
 DeviceService deviceService(webSocketClient);
-DeviceModel deviceModel(userId, deviceId, deviceSerial, deviceName, deviceService);
+DeviceModel deviceModel(deviceService);
 ESP8266WebServer server(80);
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
@@ -33,7 +28,7 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
   switch (type)
   {
   case WStype_DISCONNECTED:
-    Serial.printf("[WSc] Disconnected!\n");
+    Serial.printf("[WSC] Disconnected!\n");
     isWebsocketConnected = false;
     deviceModel.IsCreated = false;
     deviceModel.IsConnected = false;
@@ -41,46 +36,46 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     break;
 
   case WStype_CONNECTED:
-    Serial.printf("[WSc] Connected to url: %s\n", payload);
+    Serial.printf("[WSC] Connected to url: %s\n", payload);
     isWebsocketConnected = true;
     break;
 
   case WStype_TEXT:
-    Serial.printf("[WSc] got text: %u\n", length);
+    Serial.printf("[WSC] Got text: %u\n", length);
     deserializeJson(doc, payload);
     deviceModel.Tell(doc);
     break;
 
   case WStype_BIN:
-    Serial.printf("[WSc] got binary length: %u\n", length);
+    Serial.printf("[WSC] Got binary length: %u\n", length);
     break;
 
   case WStype_PING:
-    Serial.println("[WSc] got PING");
+    Serial.println("[WSC] Got PING");
     break;
 
   case WStype_PONG:
-    Serial.println("[WSc] got PONG");
+    Serial.println("[WSC] Got PONG");
     break;
 
   case WStype_ERROR:
-    Serial.println("[WSc] got ERROR");
+    Serial.println("[WSC] Got ERROR");
     break;
 
   case WStype_FRAGMENT_TEXT_START:
-    Serial.println("[WSc] got TEXT START");
+    Serial.println("[WSC] Got TEXT START");
     break;
 
   case WStype_FRAGMENT_BIN_START:
-    Serial.println("[WSc] got BIN START");
+    Serial.println("[WSC] Got BIN START");
     break;
 
   case WStype_FRAGMENT:
-    Serial.println("[WSc] got FRAGMENT");
+    Serial.println("[WSC] Got FRAGMENT");
     break;
 
   case WStype_FRAGMENT_FIN:
-    Serial.println("[WSc] got FRAGMENT FIN");
+    Serial.println("[WSC] Got FRAGMENT FIN");
     break;
   }
 }
@@ -148,7 +143,7 @@ void timedStuff()
   deviceModel.TryCreate();
   deviceModel.TryConnect();
   deviceModel.TryVerifyFromRom();
-  deviceModel.TryListDeviceAttachments();  
+  deviceModel.TryListDeviceAttachments();
 }
 
 void loop()
